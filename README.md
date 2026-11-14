@@ -57,7 +57,7 @@ After playing, learners can:
 | --- | --- | --- |
 | ![title](img/title.png) | ![request](img/ba.png) | ![fishing](img/fishing.png) |
 
-| Caught a fish | Delivering the fish | Hormone guide |
+| Caught a fish | Delivering the fish | Hormone book |
 | --- | --- | --- |
 | ![getfish](img/as.png) | ![delivery](img/got.png) | ![guide](img/books.png) |
 
