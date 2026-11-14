@@ -76,4 +76,4 @@ Download `index.html` and open it in any browser.
 
 ## Author
 
-Q · Grade / School · [GitHub](https://github.com/JuicyPapaya)
+Q  [GitHub](https://github.com/JuicyPapaya)
