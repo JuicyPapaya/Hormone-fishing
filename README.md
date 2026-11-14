@@ -1,4 +1,4 @@
-<img width="538" height="900" alt="title" src="https://github.com/user-attachments/assets/69a428c3-6be9-4687-9dc3-b8df628a9ab4" /># 🎣 Hormone Fishing
+# 🎣 Hormone Fishing
 
 An educational biology game about the **endocrine system and hormones**. Players take the role of a fisher who listens to a customer's symptoms, works out which hormone is needed, then catches the matching "hormone fish" and delivers it to the right person.
 
@@ -53,13 +53,13 @@ After playing, learners can:
 
 ## Screenshots
 
-| Title screen | Request | Fishing | Get Fish |
-| --- | --- |
-| ![title](img/title.png) | ![request](img/ba.png) |![fishing](img/fishing.png) | ![getfish](img/as.png)
+| Title screen | Customer request | Fishing |
+| --- | --- | --- |
+| ![title](img/title.png) | ![request](img/ba.png) | ![fishing](img/fishing.png) |
 
-| Delivering the fish | Hormone guide |
-| --- | --- |
-| ![delivery](img/got.png) | ![guide](img/books.png) |
+| Caught a fish | Delivering the fish | Hormone guide |
+| --- | --- | --- |
+| ![getfish](img/as.png) | ![delivery](img/got.png) | ![guide](img/books.png) |
 
 ## Built With
 
