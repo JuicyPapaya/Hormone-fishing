@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>ตกปลาฮอร์โมน | Hormone Fishing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chonburi&family=Mitr:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F2A2E;
+    --sea-deep:#0B4A5C;
+    --sea-mid:#1C7C92;
+    --sea-light:#57B7C9;
+    --sand:#F6E9D2;
+    --sand-dark:#E3CFA0;
+    --coral:#FF6B4D;
+    --coral-dark:#DD4E32;
+    --brass:#E4B13B;
+    --brass-dark:#B8842A;
+    --good:#2F9E5B;
+    --bad:#E6543D;
+    --radius-sm:10px;
+    --radius-md:16px;
+    --radius-lg:24px;
+    --shadow-1:0 2px 6px rgba(15,42,46,0.18);
+    --shadow-2:0 10px 30px rgba(11,30,35,0.35);
+    --font-display:'Chonburi', system-ui, sans-serif;
+    --font-body:'Mitr', system-ui, sans-serif;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; overflow-wrap:break-word; word-break:break-word; }
+  html,body{ height:100%; overscroll-behavior:none; }
+  html{ touch-action:manipulation; }
+  body{
+    margin:0;
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 20% 0%, #123c48 0%, transparent 55%),
+      linear-gradient(160deg, #0B2E38 0%, #08181C 100%);
+    height:100vh; height:100dvh;
+    width:100vw;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    position:fixed; inset:0;
+    overscroll-behavior:none;
+  }
+  button{ font-family:inherit; }
+  button:focus-visible{ outline:3px solid var(--brass); outline-offset:2px; }
+
+  #app{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+
+  #game-frame{
+    position:relative;
+    width:100%; max-width:480px; height:100%;
+    background:var(--sand);
+    overflow:hidden;
+    isolation:isolate;
+  }
+  @media (min-width:560px){
+    #game-frame{
+      height:min(860px,96dvh);
+      border-radius:32px;
+      box-shadow:var(--shadow-2), 0 0 0 10px #0d3540, 0 0 0 12px rgba(228,177,59,0.55);
+    }
+  }
+
+  /* ---------- HUD ---------- */
+  .hud{
+    position:absolute; top:0; left:0; right:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; pointer-events:none;
+  }
+  .hud > *{ pointer-events:auto; }
+  .hud.hud-hidden{ display:none; }
+  .hud-left{ display:flex; align-items:center; gap:8px; }
+  .hud-fame{
+    display:flex; align-items:center; gap:6px;
+    background:var(--ink); color:var(--brass);
+    font-family:var(--font-display); font-size:15px;
+    padding:8px 14px 8px 10px; border-radius:999px;
+    box-shadow:var(--shadow-1); border:1.5px dashed var(--brass);
+  }
+  .hud-coins{
+    display:flex; align-items:center; gap:6px;
+    background:#fff8dc; color:#79530b;
+    font-family:var(--font-display); font-size:15px;
+    padding:8px 14px 8px 10px; border-radius:999px;
+    box-shadow:var(--shadow-1); border:1.5px dashed var(--brass-dark);
+  }
+  .hud-actions{ display:flex; gap:8px; }
+  .btn-icon{
+    width:40px; height:40px; border-radius:50%; border:none;
+    background:rgba(15,42,46,0.85); color:var(--sand); font-size:18px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow:var(--shadow-1); flex-shrink:0;
+  }
+  .btn-icon:active{ transform:scale(0.92); }
+
+  /* ---------- Screens ---------- */
+  .screen{
+    position:absolute; inset:0; z-index:1;
+    opacity:0; pointer-events:none; transform:translateY(10px);
+    transition:opacity .32s ease, transform .32s ease;
+    display:flex; flex-direction:column;
+  }
+  .screen.active{ opacity:1; pointer-events:auto; transform:translateY(0); }
+  @media (prefers-reduced-motion:reduce){ .screen{ transition:none; transform:none; } }
+
+  .scene{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px 20px; gap:16px; position:relative; overflow-y:auto;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    font-weight:600; font-size:16px; border:none; border-radius:999px;
+    padding:14px 26px; cursor:pointer; transition:transform .12s ease, filter .12s ease;
+  }
+  .btn:active{ transform:scale(0.96); }
+  .btn-primary{ background:var(--coral); color:#FFF8F0; box-shadow:0 6px 0 var(--coral-dark), var(--shadow-1); }
+  .btn-primary:active{ box-shadow:0 2px 0 var(--coral-dark); transform:translateY(4px) scale(0.98); }
+  .btn-secondary{ background:transparent; color:var(--ink); border:2px solid var(--ink); }
+  .btn-text{ background:none; border:none; color:var(--sea-mid); text-decoration:underline; font-size:13.5px; padding:8px; }
+  .btn-large{ font-size:18px; padding:16px 32px; width:100%; max-width:300px; }
+
+  /* ---------- Title screen ---------- */
+  .scene-title{
+    background:linear-gradient(180deg,#BEE7EF 0%, #8FD0DE 55%, #4FA9BD 100%);
+    overflow:hidden;
+  }
+  .title-bubble{ position:absolute; border-radius:50%; background:rgba(255,255,255,0.45); animation:floatUp 9s linear infinite; }
+  @keyframes floatUp{ from{ transform:translateY(0); opacity:.8; } to{ transform:translateY(-460px); opacity:0; } }
+  @media (prefers-reduced-motion:reduce){ .title-bubble{ animation:none; display:none; } }
+  .title-sun{
+    position:absolute; top:18px; right:24px; width:46px; height:46px; border-radius:50%; z-index:1;
+    background:radial-gradient(circle, #FFE8A3 0%, #FFD166 60%, rgba(255,209,102,0) 100%);
+    box-shadow:0 0 24px 8px rgba(255,209,102,0.5);
+  }
+  .cloud{ position:absolute; z-index:1; width:66px; height:24px; background:rgba(255,255,255,0.85); border-radius:50px; animation:driftCloud 42s linear infinite; }
+  .cloud::before{ content:''; position:absolute; width:34px; height:34px; background:inherit; border-radius:50%; top:-16px; left:8px; }
+  .cloud::after{ content:''; position:absolute; width:26px; height:26px; background:inherit; border-radius:50%; top:-11px; right:10px; }
+  @keyframes driftCloud{ from{ transform:translateX(-60px);} to{ transform:translateX(360px);} }
+  @media (prefers-reduced-motion:reduce){ .cloud{ animation:none; } }
+  .title-moon{
+    display:none; position:absolute; top:16px; right:26px; width:42px; height:42px; border-radius:50%; z-index:1;
+    background:radial-gradient(circle at 35% 35%, #F4F6FF 0%, #C9D2E8 70%, rgba(201,210,232,0) 100%);
+    box-shadow:0 0 20px 6px rgba(201,210,232,0.4);
+  }
+  .star{ display:none; position:absolute; width:3px; height:3px; background:#fff; border-radius:50%; z-index:1; animation:twinkle 3s ease-in-out infinite; }
+  @keyframes twinkle{ 0%,100%{ opacity:0.3; } 50%{ opacity:1; } }
+  @media (prefers-reduced-motion:reduce){ .star{ animation:none; opacity:0.8; } }
+  .title-sign{
+    background:var(--ink); padding:18px 30px; border-radius:14px; position:relative;
+    box-shadow:var(--shadow-2); transform:rotate(-2deg); z-index:2;
+  }
+  .title-sign::before, .title-sign::after{ content:''; position:absolute; top:-22px; width:6px; height:26px; background:#7a5c33; border-radius:2px; }
+  .title-sign::before{ left:22px; transform:rotate(-8deg); }
+  .title-sign::after{ right:22px; transform:rotate(8deg); }
+  .title-sign h1{ font-family:var(--font-display); color:var(--brass); font-size:clamp(26px,7vw,36px); margin:0; text-align:center; letter-spacing:1px; }
+  .title-subtitle{ font-weight:500; text-align:center; font-size:15px; max-width:280px; z-index:2; position:relative; }
+  .title-buttons{ display:flex; flex-direction:column; gap:10px; align-items:center; width:100%; margin-top:8px; z-index:2; position:relative; }
+  .title-credit{ position:absolute; bottom:16px; font-size:11px; color:rgba(15,42,46,0.65); text-align:center; z-index:2; }
+
+  /* ---------- Shop screen ---------- */
+  .scene-shop{ background:linear-gradient(180deg,#BEE7EF 0%, #8FD0DE 55%, #4FA9BD 100%); justify-content:flex-start; padding:0; gap:0; }
+  .shop-sign{
+    position:absolute; top:14px; left:50%; transform:translateX(-50%) rotate(-1.5deg);
+    background:var(--ink); color:var(--brass); font-family:var(--font-display); font-size:14px;
+    padding:8px 18px; border-radius:8px; box-shadow:var(--shadow-1); white-space:nowrap; z-index:6;
+  }
+  .shop-scenery{ position:relative; flex:1 1 auto; width:100%; overflow:hidden; min-height:110px; }
+  .shop-counter{
+    width:100%; background:var(--sand); border-top:6px solid var(--sand-dark);
+    border-radius:22px 22px 0 0; padding:20px 18px 26px; flex:0 0 auto;
+    box-shadow:0 -8px 24px rgba(15,42,46,0.12);
+    display:flex; flex-direction:column; gap:14px; max-height:78%; overflow-y:auto;
+  }
+  .shop-panel{ display:flex; flex-direction:column; gap:14px; }
+  .customer-row{ display:flex; align-items:center; gap:10px; }
+  .avatar{ font-size:40px; line-height:1; }
+  .avatar-sm{ font-size:26px; }
+  .customer-name{ font-family:var(--font-display); font-size:16px; }
+  .speech-bubble{ background:#fff; border-radius:var(--radius-md); padding:14px 16px; position:relative; box-shadow:var(--shadow-1); border:2px solid var(--ink); }
+  .speech-bubble::before{ content:''; position:absolute; top:-9px; left:28px; width:16px; height:16px; background:#fff; border-left:2px solid var(--ink); border-top:2px solid var(--ink); transform:rotate(45deg); }
+  .speech-bubble p{ margin:0; font-size:14.5px; line-height:1.65; }
+  .reaction-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .reaction-badge{ font-family:var(--font-display); font-size:14px; padding:6px 14px; border-radius:999px; }
+  .reaction-badge.good{ background:#DEF3E3; color:var(--good); }
+  .reaction-badge.bad{ background:#FBE0DA; color:var(--bad); }
+  .fame-change{ font-weight:700; font-size:15px; }
+  .fame-change.good{ color:var(--good); }
+  .fame-change.bad{ color:var(--bad); }
+  .coin-change{ color:#8a5b00; font-weight:700; font-size:15px; }
+  .mismatch-note{ font-size:13px; background:#FFF3D6; border:1.5px dashed var(--brass-dark); border-radius:var(--radius-sm); padding:10px 12px; color:#7a5c1c; }
+  .info-card-label{ font-size:12px; color:var(--sea-mid); font-weight:600; margin:0; }
+  .info-card{ background:#FFFAF0; border-radius:var(--radius-md); padding:14px 16px; border:1.5px dashed var(--sand-dark); font-size:13.5px; line-height:1.65; }
+  .info-card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; flex-wrap:wrap; gap:6px; }
+  .info-fish-name{ font-family:var(--font-display); font-size:16px; }
+  .info-gland-tag{ font-size:11px; background:var(--sea-mid); color:#fff; padding:3px 10px; border-radius:999px; }
+  .info-card p{ margin:4px 0; }
+  .guide-note{ font-style:italic; color:var(--sea-mid); font-size:12.5px; }
+  .delivery-fish-frame{
+    width:130px; height:130px; border-radius:50%; margin:0 auto;
+    background:radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,255,255,0.15) 70%);
+    display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-1);
+  }
+  .delivery-fish-caption{ margin:0; text-align:center; font-size:13px; }
+
+  /* Font-size boost (+4px) scoped only to the delivery view, per request */
+  #shop-delivery-view .customer-name{ font-size:20px; }
+  #shop-delivery-view .reaction-badge{ font-size:18px; }
+  #shop-delivery-view .fame-change{ font-size:19px; }
+  #shop-delivery-view .speech-bubble p{ font-size:18.5px; }
+  #shop-delivery-view .mismatch-note{ font-size:17px; }
+  #shop-delivery-view .info-card{ font-size:17.5px; }
+  #shop-delivery-view .info-fish-name{ font-size:20px; }
+  #shop-delivery-view .info-gland-tag{ font-size:15px; }
+  #shop-delivery-view .guide-note{ font-size:16.5px; }
+  #shop-delivery-view .info-card-label{ font-size:16px; }
+  #shop-delivery-view .delivery-fish-caption{ font-size:16px; }
+
+  /* ---------- Shared pier + character scenery (shop & dock) ---------- */
+  .scenery-canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .pier{
+    position:absolute; left:0; right:0; bottom:0; height:46px;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 30px, rgba(0,0,0,0.16) 30px 32px),
+      repeating-linear-gradient(90deg, #A9764B 0 32px, #8B5E34 32px 35px),
+      linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 30%);
+    border-top:3px solid rgba(255,255,255,0.35);
+    box-shadow:0 6px 14px rgba(0,0,0,0.28);
+  }
+  .pier::after{
+    content:'';
+    position:absolute; left:0; right:0; top:-8px; height:8px;
+    background-image:repeating-linear-gradient(90deg, #6B4423 0 4px, transparent 4px 58px);
+    opacity:0.8;
+  }
+  .player-character{
+    --player-outfit:#FF6B4D; --player-pants:#0F2A2E; --player-boots:#B8842A;
+    --player-hat:#E4B13B; --player-hat-dark:#B8842A; --player-rod:#8A5A2B; --player-bobber:#E4B13B;
+    width:118px; height:auto; position:absolute; bottom:40px; left:50%; transform:translateX(-50%); filter:drop-shadow(0 4px 6px rgba(0,0,0,0.18));
+  }
+  .player-character.outfit-river{ --player-outfit:#3772FF; --player-pants:#173B6C; --player-boots:#243B53; --player-hat:#82C0CC; --player-hat-dark:#3B6978; }
+  .player-character.outfit-sunset{ --player-outfit:#9B5DE5; --player-pants:#4A306D; --player-boots:#5A3825; --player-hat:#F15BB5; --player-hat-dark:#B5176B; }
+  .player-character.outfit-forest{ --player-outfit:#2F9E5B; --player-pants:#254D32; --player-boots:#6B4423; --player-hat:#A7C957; --player-hat-dark:#5D7A28; }
+  .player-character.rod-bamboo{ --player-rod:#426B2A; --player-bobber:#E4B13B; }
+  .player-character.rod-ocean{ --player-rod:#22577A; --player-bobber:#FF6B4D; }
+  .player-character.rod-starlight{ --player-rod:#6D597A; --player-bobber:#F7D774; }
+
+  /* ---------- Dock screen ---------- */
+  .scene-dock{ background:linear-gradient(180deg,#BEE7EF 0%, #4FA9BD 60%, #1C7C92 100%); justify-content:flex-start; }
+  .dock-recap{ background:rgba(255,255,255,0.94); border-radius:var(--radius-md); padding:14px 16px; margin-top:62px; display:flex; gap:10px; align-items:flex-start; box-shadow:var(--shadow-1); }
+  .dock-recap p{ margin:0; font-size:13.5px; line-height:1.6; }
+  .dock-scenery{ position:relative; flex:1 1 auto; width:100%; overflow:hidden; min-height:110px; }
+
+  /* ---------- Fishing screen ---------- */
+  #screen-fishing{ background:#0B3D4D; }
+  .fishing-hint{ position:absolute; top:0; left:0; right:0; z-index:10; background:linear-gradient(180deg, rgba(11,42,52,0.96), rgba(11,42,52,0.62) 84%, transparent); padding:16px 14px 38px; display:flex; align-items:flex-start; gap:9px; }
+  .fishing-hint p{ margin:0; flex:1; min-width:0; color:#fff; font-size:16.5px; font-weight:500; line-height:1.55; background:rgba(0,0,0,0.34); padding:12px 14px; border-radius:var(--radius-sm); max-height:none; overflow:visible; }
+  #fishing-canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+  .fishing-tip{
+    position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) scale(0.9);
+    background:rgba(15,42,46,0.92); color:#fff; padding:12px 18px; border-radius:var(--radius-md);
+    font-size:13px; text-align:center; max-width:250px; line-height:1.55;
+    opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease; z-index:15;
+  }
+  .fishing-tip.show{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .qte-layer{ position:absolute; inset:0; z-index:25; pointer-events:none; }
+  .qte-status{ position:absolute; top:31%; left:50%; transform:translateX(-50%); width:max-content; max-width:calc(100% - 32px); padding:9px 14px; border-radius:999px; background:rgba(15,42,46,0.92); color:#fff; font-weight:700; text-align:center; opacity:0; transition:opacity .15s ease; }
+  .qte-status.show{ opacity:1; }
+  .qte-action{ position:absolute; width:112px; min-height:58px; border:3px solid #fff; border-radius:999px; background:var(--coral); color:#fff; font-family:var(--font-body); font-size:16px; font-weight:700; box-shadow:0 5px 0 var(--coral-dark), 0 8px 18px rgba(0,0,0,0.32); transform:translate(-50%,-50%) scale(0.8); opacity:0; pointer-events:none; transition:opacity .14s ease, transform .14s ease; }
+  .qte-action.show{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); animation:qtePulse .8s ease-in-out infinite alternate; }
+  .qte-action:active{ transform:translate(-50%,-50%) scale(.92); box-shadow:0 2px 0 var(--coral-dark); }
+  .qte-decoy{ position:absolute; width:88px; min-height:48px; border:2px solid rgba(255,255,255,.8); border-radius:999px; background:#51636a; color:#fff; font-family:var(--font-body); font-size:13px; font-weight:700; box-shadow:0 4px 0 #304047, 0 7px 15px rgba(0,0,0,.28); transform:translate(-50%,-50%) scale(.8); opacity:0; pointer-events:none; transition:opacity .14s ease, transform .14s ease; }
+  .qte-decoy.show{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); animation:qteDecoyPulse .45s ease-in-out infinite alternate; }
+  .qte-decoy:active{ transform:translate(-50%,-50%) scale(.92); }
+  @keyframes qtePulse{ from{ filter:brightness(1); } to{ filter:brightness(1.13); } }
+  @keyframes qteDecoyPulse{ from{ filter:brightness(.92); } to{ filter:brightness(1.08); } }
+  .joystick-zone{ position:absolute; left:50%; bottom:24px; z-index:12; transform:translateX(-50%); }
+  .joystick-base{ width:142px; height:142px; border-radius:50%; background:rgba(255,255,255,0.22); border:3px solid rgba(255,255,255,0.56); display:flex; align-items:center; justify-content:center; touch-action:none; box-shadow:0 6px 18px rgba(0,0,0,0.2); }
+  .joystick-knob{ width:64px; height:64px; border-radius:50%; background:var(--coral); box-shadow:0 4px 10px rgba(0,0,0,0.3); transition:transform .05s linear; }
+
+  /* ---------- Surface screen ---------- */
+  .scene-surface{ background:linear-gradient(180deg,#BEE7EF 0%, #DCE9CE 100%); }
+  .surface-title{ font-family:var(--font-display); font-size:23px; margin:0; }
+  .surface-fish-frame{ width:180px; height:180px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,255,255,0.15) 70%); display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-1); }
+  .surface-fish-name{ font-family:var(--font-display); font-size:19px; text-align:center; }
+
+  /* ---------- Summary screen ---------- */
+  .scene-summary{ background:var(--sand); }
+  .summary-stats{ display:flex; gap:12px; }
+  .stat-box{ background:#fff; border-radius:var(--radius-md); padding:16px 18px; text-align:center; box-shadow:var(--shadow-1); min-width:84px; }
+  .stat-num{ display:block; font-family:var(--font-display); font-size:26px; color:var(--coral); }
+  .stat-label{ font-size:12px; }
+
+  /* ---------- Modals ---------- */
+  .modal-overlay{
+    position:absolute; inset:0; background:rgba(8,20,24,0.6); z-index:50;
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .modal-overlay.open{ opacity:1; pointer-events:auto; }
+  .modal-box{ background:var(--sand); width:100%; max-height:82%; border-radius:24px 24px 0 0; display:flex; flex-direction:column; transform:translateY(20px); transition:transform .25s ease; }
+  .modal-overlay.open .modal-box{ transform:translateY(0); }
+  .modal-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:2px dashed var(--sand-dark); }
+  .modal-header h3{ font-family:var(--font-display); margin:0; font-size:18px; }
+  .modal-body{ padding:14px 18px 26px; overflow-y:auto; }
+
+  .guide-item{ border-bottom:1px dashed var(--sand-dark); padding:10px 0; }
+  .guide-item-head{ width:100%; display:flex; align-items:center; gap:12px; background:none; border:none; cursor:pointer; padding:4px 0; text-align:left; }
+  .guide-fish-icon{ width:52px; height:52px; flex-shrink:0; }
+  .guide-fish-locked{ width:52px; height:52px; flex-shrink:0; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--ink); color:var(--sand-dark); font-family:var(--font-display); font-size:25px; box-shadow:inset 0 0 0 2px rgba(255,255,255,0.12); }
+  .guide-item-titles{ flex:1; display:flex; flex-direction:column; }
+  .guide-item-name{ font-family:var(--font-display); font-size:15px; }
+  .guide-item-gland{ font-size:11.5px; color:var(--sea-mid); }
+  .guide-item-chevron{ transition:transform .2s ease; }
+  .guide-item.open .guide-item-chevron{ transform:rotate(180deg); }
+  .guide-item-body{ max-height:0; overflow:hidden; transition:max-height .25s ease; font-size:13px; line-height:1.6; }
+  .guide-item.open .guide-item-body{ max-height:420px; padding-top:8px; }
+  .guide-item-body p{ margin:4px 0; }
+
+  /* Guide-only font boost (+3px), scoped so the howto modal (shares .modal-header h3) is untouched */
+  #modal-guide .modal-header h3{ font-size:21px; }
+  #modal-guide .guide-item-name{ font-size:18px; }
+  #modal-guide .guide-item-gland{ font-size:14.5px; }
+  #modal-guide .guide-item-body{ font-size:16px; }
+  #modal-guide .guide-item-body .guide-note{ font-size:15.5px; }
+  .guide-item-titles{ min-width:0; }
+
+  /* ---------- Cosmetic shop ---------- */
+  .shop-wallet{ display:flex; align-items:center; justify-content:center; gap:8px; background:#fff8dc; border:2px dashed var(--brass-dark); border-radius:var(--radius-md); padding:10px 14px; color:#79530b; font-weight:700; }
+  .shop-preview-wrap{ display:flex; justify-content:center; align-items:center; min-height:140px; border-radius:var(--radius-md); background:linear-gradient(180deg,#BEE7EF,#4FA9BD); overflow:hidden; }
+  .player-character.shop-preview{ position:relative; left:auto; bottom:-16px; transform:none; width:108px; }
+  .skin-section{ margin-top:18px; }
+  .skin-section-title{ margin:0 0 8px; color:var(--sea-mid); font-weight:700; }
+  .skin-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .skin-card{ text-align:left; border:2px solid var(--sand-dark); border-radius:var(--radius-md); padding:10px; background:#fff; color:var(--ink); font-family:var(--font-body); cursor:pointer; }
+  .skin-card.owned{ border-color:var(--sea-mid); }
+  .skin-card.equipped{ border-color:var(--good); background:#edf9f0; }
+  .skin-card-name{ display:block; font-weight:700; font-size:13px; }
+  .skin-card-price{ display:block; margin-top:4px; color:#8a5b00; font-size:12px; }
+  .skin-card.equipped .skin-card-price{ color:var(--good); }
+  .shop-message{ min-height:24px; margin:14px 0 0; text-align:center; font-size:13px; color:var(--sea-mid); }
+
+  .howto-list{ padding-left:20px; font-size:14px; line-height:1.85; margin:0; }
+  .howto-list li{ margin-bottom:6px; }
+
+  .settings-section{ margin-bottom:20px; }
+  .settings-section:last-child{ margin-bottom:4px; }
+  .settings-label{ font-size:13px; font-weight:600; color:var(--sea-mid); margin:0 0 8px; }
+  .settings-options{ display:flex; gap:8px; flex-wrap:wrap; }
+  .settings-opt{
+    flex:1; min-width:92px; font-family:var(--font-body); font-size:13.5px; font-weight:600;
+    padding:10px 8px; border-radius:var(--radius-md); border:2px solid var(--sand-dark);
+    background:#fff; color:var(--ink); cursor:pointer; transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .settings-opt.active{ background:var(--coral); border-color:var(--coral-dark); color:#fff8f0; }
+  .settings-row{ display:flex; align-items:center; justify-content:space-between; }
+  .settings-toggle{
+    font-family:var(--font-body); font-weight:600; font-size:14px; padding:9px 18px;
+    border-radius:999px; border:2px solid var(--ink); background:#fff; color:var(--ink); cursor:pointer;
+  }
+  .settings-toggle.off{ background:var(--sand-dark); color:rgba(15,42,46,0.55); border-color:var(--sand-dark); }
+
+  .settings-gear-title{ position:absolute; top:14px; right:14px; z-index:6; }
+
+  /* =====================================================
+     TIME-OF-DAY THEMES — swap only the environmental scenery
+     (skies, water, pier, sun/moon) and the text that sits
+     directly on them; card/button chrome stays the same
+     for guaranteed readability. "day" is the default/base
+     styling defined earlier, so only morning/evening/night
+     need overrides here.
+     ===================================================== */
+  [data-theme="morning"] body{
+    background:
+      radial-gradient(circle at 20% 0%, #3a2e2a 0%, transparent 55%),
+      linear-gradient(160deg, #2E5866 0%, #12242c 100%);
+  }
+  [data-theme="morning"] .scene-title,
+  [data-theme="morning"] .scene-shop{ background:linear-gradient(180deg,#FFE8D6 0%, #FFAB91 55%, #4A90A4 100%); }
+  [data-theme="morning"] .scene-dock{ background:linear-gradient(180deg,#FFE8D6 0%, #4A90A4 60%, #2E5866 100%); }
+  [data-theme="morning"] .scene-surface{ background:linear-gradient(180deg,#FFE8D6 0%, #C9A88A 100%); }
+  [data-theme="morning"] .scene-summary{ background:#FFEFE0; }
+  [data-theme="morning"] #screen-fishing{ background:#1B4B5A; }
+
+  [data-theme="evening"] body{
+    background:
+      radial-gradient(circle at 20% 0%, #3d2436 0%, transparent 55%),
+      linear-gradient(160deg, #2A1B3D 0%, #140a1c 100%);
+  }
+  [data-theme="evening"] .scene-title,
+  [data-theme="evening"] .scene-shop{ background:linear-gradient(180deg,#FFCBA4 0%, #E8836B 55%, #5B3862 100%); }
+  [data-theme="evening"] .scene-dock{ background:linear-gradient(180deg,#FFCBA4 0%, #B25D6B 60%, #2A1B3D 100%); }
+  [data-theme="evening"] .scene-surface{ background:linear-gradient(180deg,#FFCBA4 0%, #6E4A62 100%); }
+  [data-theme="evening"] .scene-summary{ background:#3D2A44; }
+  [data-theme="evening"] #screen-fishing{ background:#2A1B3D; }
+
+  [data-theme="night"] body{
+    background:
+      radial-gradient(circle at 20% 0%, #0a1626 0%, transparent 55%),
+      linear-gradient(160deg, #050a12 0%, #020408 100%);
+  }
+  [data-theme="night"] .scene-title{ background:linear-gradient(180deg,#1a2a4a 0%, #16213e 55%, #0a1128 100%); }
+  [data-theme="night"] .scene-shop{ background:linear-gradient(180deg,#1a2a4a 0%, #16213e 55%, #0a1128 100%); }
+  [data-theme="night"] .scene-dock{ background:linear-gradient(180deg,#1a2a4a 0%, #16213e 60%, #050a12 100%); }
+  [data-theme="night"] .scene-surface{ background:linear-gradient(180deg,#1a2a4a 0%, #2a3550 100%); }
+  [data-theme="night"] .scene-summary{ background:#232838; }
+  [data-theme="night"] #screen-fishing{ background:#050a12; }
+
+  [data-theme="night"] .title-subtitle, [data-theme="evening"] .title-subtitle,
+  [data-theme="night"] .surface-title, [data-theme="evening"] .surface-title,
+  [data-theme="night"] .surface-fish-name, [data-theme="evening"] .surface-fish-name,
+  [data-theme="night"] .scene-summary h2, [data-theme="evening"] .scene-summary h2{ color:#E8ECF5; }
+  [data-theme="night"] .title-credit, [data-theme="evening"] .title-credit{ color:rgba(232,236,245,0.7); }
+  [data-theme="night"] .btn-secondary, [data-theme="evening"] .btn-secondary{ color:#E8ECF5; border-color:#E8ECF5; }
+  [data-theme="night"] .btn-text, [data-theme="evening"] .btn-text{ color:#6FD5E8; }
+
+  [data-theme="night"] .pier{ filter:brightness(0.55) saturate(0.75); }
+  [data-theme="night"] .player-character{ filter:brightness(0.78) drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+  [data-theme="evening"] .pier{ filter:brightness(0.8) saturate(0.9); }
+  [data-theme="evening"] .player-character{ filter:brightness(0.9) drop-shadow(0 4px 6px rgba(0,0,0,0.25)); }
+
+  [data-theme="night"] .title-sun, [data-theme="evening"] .title-sun,
+  [data-theme="night"] .cloud, [data-theme="evening"] .cloud{ display:none; }
+  [data-theme="night"] .title-moon, [data-theme="evening"] .title-moon,
+  [data-theme="night"] .star, [data-theme="evening"] .star{ display:block; }
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px;font-family:sans-serif">กรุณาเปิดใช้งาน JavaScript เพื่อเล่นเกมนี้</p></noscript>
+
+<!-- Reusable player-character illustration, referenced via <use> on the shop & dock screens -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="player-char" viewBox="0 0 160 210">
+    <ellipse cx="80" cy="200" rx="38" ry="8" fill="rgba(15,42,46,0.15)"/>
+    <line x1="102" y1="118" x2="120" y2="95" stroke="#EFC29A" stroke-width="13" stroke-linecap="round"/>
+    <line x1="120" y1="95" x2="150" y2="35" stroke="var(--player-rod, #8A5A2B)" stroke-width="5" stroke-linecap="round"/>
+    <line x1="150" y1="35" x2="150" y2="100" stroke="#F6E9D2" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <circle cx="150" cy="103" r="4.5" fill="var(--player-bobber, #E4B13B)"/>
+    <rect x="58" y="160" width="20" height="40" rx="9" fill="var(--player-pants, #0F2A2E)"/>
+    <rect x="82" y="160" width="20" height="40" rx="9" fill="var(--player-pants, #0F2A2E)"/>
+    <ellipse cx="68" cy="201" rx="15" ry="8" fill="var(--player-boots, #B8842A)"/>
+    <ellipse cx="92" cy="201" rx="15" ry="8" fill="var(--player-boots, #B8842A)"/>
+    <path d="M52 104 Q80 92 108 104 L112 165 Q80 176 48 165 Z" fill="var(--player-outfit, #FF6B4D)"/>
+    <line x1="54" y1="112" x2="42" y2="145" stroke="#EFC29A" stroke-width="13" stroke-linecap="round"/>
+    <circle cx="42" cy="148" r="8" fill="#EFC29A"/>
+    <rect x="72" y="82" width="16" height="16" fill="#EFC29A"/>
+    <circle cx="80" cy="70" r="28" fill="#EFC29A"/>
+    <circle cx="70" cy="68" r="3.2" fill="#0F2A2E"/>
+    <circle cx="90" cy="68" r="3.2" fill="#0F2A2E"/>
+    <path d="M69 79 Q80 88 91 79" stroke="#0F2A2E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="62" cy="76" rx="5" ry="3.5" fill="rgba(255,107,77,0.35)"/>
+    <ellipse cx="98" cy="76" rx="5" ry="3.5" fill="rgba(255,107,77,0.35)"/>
+    <ellipse cx="80" cy="46" rx="40" ry="10" fill="var(--player-hat, #E4B13B)"/>
+    <path d="M54 46 Q80 14 106 46 Z" fill="var(--player-hat-dark, #B8842A)"/>
+  </symbol>
+</svg>
+
+<audio id="bg-music" src="https://files.catbox.moe/mas0kc.mp3" loop preload="auto"></audio>
+
+<div id="app">
+  <div id="game-frame">
+
+    <div class="hud" id="hud">
+      <div class="hud-left">
+        <button class="btn-icon" id="btn-back-dynamic" aria-label="ย้อนกลับ" style="display:none">←</button>
+        <div class="hud-fame"><span>🎖️</span><span id="fame-count">0</span></div>
+        <div class="hud-coins"><span>💰</span><span id="coin-count">0</span></div>
+      </div>
+      <div class="hud-actions">
+        <button class="btn-icon" id="btn-guide-hud" aria-label="เปิดสมุดฮอร์โมน">📖</button>
+        <button class="btn-icon" id="btn-shop-hud" aria-label="เปิดร้านสกิน">🛍️</button>
+        <button class="btn-icon settings-gear-btn" id="btn-settings-hud" aria-label="ตั้งค่า">⚙️</button>
+      </div>
+    </div>
+
+    <!-- TITLE -->
+    <section id="screen-title" class="screen active">
+      <div class="scene scene-title">
+        <button class="btn-icon settings-gear-btn settings-gear-title" id="btn-settings-title" aria-label="ตั้งค่า">⚙️</button>
+        <div class="title-sun"></div>
+        <div class="title-moon"></div>
+        <div class="star" style="top:8%; left:18%;"></div>
+        <div class="star" style="top:14%; left:78%; animation-delay:-1s;"></div>
+        <div class="star" style="top:26%; left:38%; animation-delay:-2s;"></div>
+        <div class="star" style="top:32%; left:62%; animation-delay:-0.5s;"></div>
+        <div class="cloud" style="top:12%; left:8%; animation-delay:-6s;"></div>
+        <div class="cloud" style="top:20%; left:52%; animation-delay:-24s; transform:scale(0.7);"></div>
+        <div class="title-bubble" style="width:14px;height:14px;left:15%;bottom:10%;animation-delay:0s;"></div>
+        <div class="title-bubble" style="width:10px;height:10px;left:70%;bottom:5%;animation-delay:2s;"></div>
+        <div class="title-bubble" style="width:18px;height:18px;left:45%;bottom:0%;animation-delay:4s;"></div>
+        <div class="title-bubble" style="width:8px;height:8px;left:85%;bottom:15%;animation-delay:1s;"></div>
+        <div class="title-sign"><h1>ตกปลาฮอร์โมน</h1></div>
+        <p class="title-subtitle">เกมผจญภัยกับฮอร์โมนจากต่อมไร้ท่อ</p>
+        <div class="title-buttons">
+          <button class="btn btn-primary btn-large" id="btn-start">เริ่มเล่น ▸</button>
+          <button class="btn btn-secondary" id="btn-howto">วิธีเล่น</button>
+          <button class="btn btn-secondary" id="btn-guide-title">สมุดฮอร์โมน</button>
+        </div>
+        <p class="title-credit">เกมเพื่อการศึกษา วิชาชีววิทยา • ระบบต่อมไร้ท่อ</p>
+      </div>
+    </section>
+
+    <!-- SHOP -->
+    <section id="screen-shop" class="screen">
+      <div class="scene scene-shop">
+        <div class="shop-sign">ร้านปลาฮอร์โมน</div>
+        <div class="shop-scenery">
+          <canvas class="scenery-canvas" id="shop-scenery-canvas"></canvas>
+          <div class="pier"></div>
+          <svg class="player-character" viewBox="0 0 160 210"><use href="#player-char"></use></svg>
+        </div>
+        <div class="shop-counter">
+          <div id="shop-request-view" class="shop-panel">
+            <div class="customer-row">
+              <div class="avatar" id="shop-avatar"></div>
+              <div class="customer-name" id="shop-customer-name"></div>
+            </div>
+            <div class="speech-bubble"><p id="shop-bubble-text"></p></div>
+            <button class="btn btn-primary" id="btn-go-fish">ไปตกปลาให้ลูกค้า 🎣</button>
+          </div>
+          <div id="shop-delivery-view" class="shop-panel" style="display:none">
+            <div class="customer-row">
+              <div class="avatar" id="delivery-avatar"></div>
+              <div class="customer-name" id="delivery-customer-name"></div>
+            </div>
+            <div class="delivery-fish-frame"><canvas id="delivery-fish-canvas" width="120" height="120"></canvas></div>
+            <p class="delivery-fish-caption">ปลาที่คุณส่งไป: <strong id="delivery-caught-name"></strong></p>
+            <div class="reaction-row">
+              <span class="reaction-badge" id="delivery-reaction-badge"></span>
+              <span class="fame-change" id="delivery-fame-change"></span>
+              <span class="coin-change" id="delivery-coin-change"></span>
+            </div>
+            <div class="speech-bubble"><p id="delivery-feedback-text"></p></div>
+            <div class="mismatch-note" id="delivery-mismatch-note" style="display:none"></div>
+            <p class="info-card-label">เฉลย: ฮอร์โมนที่ลูกค้าต้องการ</p>
+            <div class="info-card">
+              <div class="info-card-head">
+                <span class="info-fish-name" id="delivery-info-name"></span>
+                <span class="info-gland-tag" id="delivery-info-gland"></span>
+              </div>
+              <p><strong>หน้าที่:</strong> <span id="delivery-info-func"></span></p>
+              <p><strong>เมื่อขาด:</strong> <span id="delivery-info-deficiency"></span></p>
+              <p><strong>เมื่อเกิน:</strong> <span id="delivery-info-excess"></span></p>
+              <p class="guide-note" id="delivery-info-note" style="display:none"></p>
+            </div>
+            <button class="btn btn-primary" id="btn-next-customer">ลูกค้าคนต่อไป ▸</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCK -->
+    <section id="screen-dock" class="screen">
+      <div class="scene scene-dock">
+        <div class="dock-recap">
+          <div class="avatar avatar-sm" id="dock-avatar"></div>
+          <p id="dock-recap-text"></p>
+        </div>
+        <div class="dock-scenery">
+          <canvas class="scenery-canvas" id="dock-scenery-canvas"></canvas>
+          <div class="pier"></div>
+          <svg class="player-character" viewBox="0 0 160 210"><use href="#player-char"></use></svg>
+        </div>
+        <button class="btn btn-primary btn-large" id="btn-cast">โยนเบ็ดตกปลา 🎣</button>
+      </div>
+    </section>
+
+    <!-- FISHING -->
+    <section id="screen-fishing" class="screen">
+      <div class="fishing-hint">
+        <button class="btn-icon" id="btn-fishing-back" aria-label="ย้อนกลับ">←</button>
+        <p id="fishing-hint-text"></p>
+        <button class="btn-icon settings-gear-btn" id="btn-settings-fishing" aria-label="ตั้งค่า">⚙️</button>
+      </div>
+      <canvas id="fishing-canvas"></canvas>
+      <div class="fishing-tip" id="fishing-tip">ลากวงกลมด้านล่างเพื่อบังคับเบ็ดไปหาปลาที่ต้องการ</div>
+      <div class="qte-layer" id="qte-layer" aria-live="polite">
+        <div class="qte-status" id="qte-status"></div>
+        <button class="qte-action" id="qte-action" type="button">ดึงขึ้น! 🎣</button>
+        <button class="qte-decoy" id="qte-decoy" type="button">✕ เหยื่อหลอก</button>
+      </div>
+      <div class="joystick-zone">
+        <div class="joystick-base" id="joystick-base">
+          <div class="joystick-knob" id="joystick-knob"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SURFACE -->
+    <section id="screen-surface" class="screen">
+      <div class="scene scene-surface">
+        <h2 class="surface-title">ตกได้แล้ว!</h2>
+        <div class="surface-fish-frame"><canvas id="surface-fish-canvas" width="160" height="160"></canvas></div>
+        <p class="surface-fish-name" id="surface-fish-name"></p>
+        <button class="btn btn-primary btn-large" id="btn-return-shop">กลับไปหาลูกค้า ▸</button>
+      </div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section id="screen-summary" class="screen">
+      <div class="scene scene-summary">
+        <h2 style="font-family:var(--font-display); font-size:20px; text-align:center;">สรุปผลรอบที่ <span id="summary-round"></span></h2>
+        <div class="summary-stats">
+          <div class="stat-box"><span class="stat-num" id="summary-correct"></span><span class="stat-label">ถูกต้อง</span></div>
+          <div class="stat-box"><span class="stat-num" id="summary-total"></span><span class="stat-label">ทั้งหมด</span></div>
+          <div class="stat-box"><span class="stat-num" id="summary-fame"></span><span class="stat-label">คะแนนรวม</span></div>
+          <div class="stat-box"><span class="stat-num" id="summary-coins"></span><span class="stat-label">เหรียญ</span></div>
+        </div>
+        <button class="btn btn-primary btn-large" id="btn-next-round">ไปต่อรอบถัดไป ▸</button>
+        <button class="btn btn-secondary" id="btn-summary-guide">ดูสมุดฮอร์โมนทั้งหมด</button>
+        <button class="btn btn-text" id="btn-restart-all">เริ่มนับคะแนนใหม่</button>
+      </div>
+    </section>
+
+    <!-- GUIDE MODAL -->
+    <div class="modal-overlay" id="modal-guide">
+      <div class="modal-box">
+        <header class="modal-header"><h3>สมุดฮอร์โมน</h3><button class="btn-icon" id="btn-close-guide" aria-label="ปิด">✕</button></header>
+        <div class="modal-body" id="guide-list"></div>
+      </div>
+    </div>
+
+    <!-- HOWTO MODAL -->
+    <div class="modal-overlay" id="modal-howto">
+      <div class="modal-box">
+        <header class="modal-header"><h3>วิธีเล่น</h3><button class="btn-icon" id="btn-close-howto" aria-label="ปิด">✕</button></header>
+        <div class="modal-body">
+          <ol class="howto-list">
+            <li>ลูกค้าจะเดินมาที่ร้านพร้อมเล่าอาการที่เกิดจากฮอร์โมนไม่สมดุล</li>
+            <li>ไปที่ท่าเรือแล้วกดโยนเบ็ดเพื่อลงไปตกปลาฮอร์โมนที่คิดว่าตรงกับอาการนั้น</li>
+            <li>ลากปุ่มวงกลมด้านล่างซ้ายเพื่อบังคับเบ็ดไปสัมผัสปลาที่ต้องการ (ใช้ปุ่มลูกศรบนคีย์บอร์ดได้เช่นกัน) ปลาจะเกิดเฉพาะโซนน้ำลึกเท่านั้น</li>
+            <li>นำปลาที่ตกได้กลับไปส่งมอบให้ลูกค้า ถ้าตรงจะได้คะแนน +1 และเงิน 3 เหรียญ ถ้าไม่ตรงจะถูกหัก -1 แต่ยังได้เงิน 1 เหรียญ</li>
+            <li>ลูกค้าจะอธิบายหน้าที่ของฮอร์โมนที่ต้องการให้ฟังทุกครั้ง ไม่ว่าจะตอบถูกหรือผิด ลองจำไว้ใช้ครั้งต่อไป</li>
+            <li>เปิด "สมุดฮอร์โมน" ได้ตลอดเวลาเพื่อทบทวนข้อมูลต่อมไร้ท่อทั้งหมด กดปุ่ม ← มุมบนซ้ายเพื่อย้อนกลับได้ทุกหน้า</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="modal-settings">
+      <div class="modal-box">
+        <header class="modal-header"><h3>ตั้งค่า</h3><button class="btn-icon" id="btn-close-settings" aria-label="ปิด">✕</button></header>
+        <div class="modal-body">
+          <div class="settings-section">
+            <p class="settings-label">ฉากท่าเรือ</p>
+            <div class="settings-options" id="scene-options">
+              <button class="settings-opt" data-scene="sea">🌊 ทะเล</button>
+              <button class="settings-opt" data-scene="lake">🪷 ทะเลสาบ</button>
+              <button class="settings-opt" data-scene="river">〰️ แม่น้ำ</button>
+            </div>
+          </div>
+          <div class="settings-section">
+            <p class="settings-label">สภาพอากาศ</p>
+            <div class="settings-options" id="weather-options">
+              <button class="settings-opt" data-weather="clear">☀️ แจ่มใส</button>
+              <button class="settings-opt" data-weather="rain">🌧️ ฝนตก</button>
+              <button class="settings-opt" data-weather="storm">⛈️ พายุ</button>
+            </div>
+          </div>
+          <div class="settings-section">
+            <p class="settings-label">เวลา</p>
+            <div class="settings-options" id="time-options">
+              <button class="settings-opt" data-time-theme="morning">🌅 เช้า</button>
+              <button class="settings-opt" data-time-theme="day">☀️ กลางวัน</button>
+              <button class="settings-opt" data-time-theme="evening">🌇 เย็น</button>
+              <button class="settings-opt" data-time-theme="night">🌙 กลางคืน</button>
+            </div>
+          </div>
+          <div class="settings-section settings-row">
+            <p class="settings-label" style="margin:0;">เสียง</p>
+            <button class="settings-toggle" id="btn-settings-sound">🔊 เปิดอยู่</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COSMETIC SHOP -->
+    <div class="modal-overlay" id="modal-shop">
+      <div class="modal-box">
+        <header class="modal-header"><h3>ร้านสกินนักตกปลา</h3><button class="btn-icon" id="btn-close-shop" aria-label="ปิด">✕</button></header>
+        <div class="modal-body">
+          <div class="shop-wallet">💰 เหรียญของคุณ <span id="shop-coin-count">0</span></div>
+          <div class="shop-preview-wrap"><svg class="player-character shop-preview" id="shop-player-preview" viewBox="0 0 160 210"><use href="#player-char"></use></svg></div>
+          <section class="skin-section">
+            <p class="skin-section-title">ชุดนักตกปลา</p>
+            <div class="skin-grid" id="outfit-shop-list"></div>
+          </section>
+          <section class="skin-section">
+            <p class="skin-section-title">เบ็ดตกปลา</p>
+            <div class="skin-grid" id="rod-shop-list"></div>
+          </section>
+          <p class="shop-message" id="shop-message" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   1) DATA — ฮอร์โมนและต่อมไร้ท่อทั้งหมดในเกม
+   ========================================================= */
+const HORMONES = [
+  {
+    id:'insulin', name:'อินซูลิน', gland:'ตับอ่อน (เซลล์บีตา)',
+    color:'#4FC3F7', colorDark:'#0277BD', size:1.0, tail:'fork', fin:'normal', pattern:'none',
+    customerName:'ลุงมานะ', customerEmoji:'👨‍🌾',
+    request:`ช่วงนี้กระหายน้ำทั้งวัน ต้องลุกไปฉี่บ่อยมาก ทั้งที่กินข้าวเยอะขึ้นแต่น้ำหนักกลับลด หมอตรวจเจอว่าน้ำตาลในเลือดสูงผิดปกติ ลุงอยากได้ปลาที่ช่วยเรื่องนี้หน่อย`,
+    func:`ลดระดับน้ำตาลในเลือด โดยกระตุ้นให้เซลล์ทั่วร่างกายดึงกลูโคสไปใช้เป็นพลังงาน หรือเก็บสะสมเป็นไกลโคเจนที่ตับ`,
+    deficiency:`เมื่อขาด ร่างกายควบคุมน้ำตาลในเลือดไม่ได้ เกิดโรคเบาหวาน (Diabetes mellitus) ปัสสาวะบ่อย กระหายน้ำ น้ำหนักลดผิดปกติ`,
+    excess:`เมื่อมากเกิน จะทำให้เกิดภาวะน้ำตาลในเลือดต่ำ (Hypoglycemia) หน้ามืด ใจสั่น มือสั่น อาจถึงขั้นเป็นลมได้`,
+    correct:`ใช่เลยจ้า! ปลาตัวนี้แหละที่ลุงตามหา กินแล้วช่วยคุมน้ำตาลได้แน่นอน ขอบใจมากนะ!`,
+    wrong:`เอ๊ะ...ปลาตัวนี้ไม่ใช่ตัวที่ลุงต้องการนะ งั้นลุงขอลองกินดูก่อนก็ได้ แต่ครั้งหน้าช่วยดูให้ดีอีกทีนะ`
+  },
+  {
+    id:'glucagon', name:'กลูคากอน', gland:'ตับอ่อน (เซลล์แอลฟา)',
+    color:'#B08968', colorDark:'#6F4E37', size:1.0, tail:'fork', fin:'normal', pattern:'spots',
+    customerName:'ป้าสมศรี', customerEmoji:'👵',
+    request:`ป้าเป็นลมบ่อยมากช่วงนี้ รู้สึกหน้ามืด ตัวสั่น เหมือนน้ำตาลในเลือดต่ำอยู่เรื่อยๆ ทั้งที่กินอาหารตรงเวลาทุกมื้อเลยนะ`,
+    func:`เพิ่มระดับน้ำตาลในเลือด โดยกระตุ้นให้ตับสลายไกลโคเจนที่สะสมไว้ให้กลายเป็นกลูโคสปล่อยเข้ากระแสเลือด ทำงานตรงข้ามกับอินซูลิน`,
+    deficiency:`เมื่อขาด ร่างกายเพิ่มน้ำตาลในเลือดยามจำเป็นไม่ได้ดี เสี่ยงต่อภาวะน้ำตาลในเลือดต่ำเรื้อรัง อ่อนเพลีย หน้ามืดง่าย`,
+    excess:`เมื่อมากเกิน จะทำให้ระดับน้ำตาลในเลือดสูงกว่าปกติได้เช่นกัน`,
+    correct:`นี่ไงปลาที่ป้าตามหา! ทานแล้วคงหายหน้ามืดสักที ขอบใจจ้ะหนู`,
+    wrong:`อืม ป้าว่าปลาตัวนี้ไม่ใช่ตัวที่ป้าอยากได้นะ ลองสังเกตให้ดีอีกทีนะจ๊ะ`
+  },
+  {
+    id:'thyroxine', name:'ไทรอกซิน', gland:'ต่อมไทรอยด์',
+    color:'#FFA94D', colorDark:'#E8590C', size:1.0, tail:'fan', fin:'normal', pattern:'stripes',
+    customerName:'น้าทองดี', customerEmoji:'🧔',
+    request:`ช่วงนี้น้าเฉื่อยชาไปหมด ง่วงตลอดเวลา ทนหนาวไม่ค่อยได้ทั้งที่อากาศไม่ได้หนาวมาก แถมน้ำหนักขึ้นทั้งที่กินเท่าเดิมด้วยนะ`,
+    func:`ควบคุมอัตราเมแทบอลิซึมของร่างกาย การใช้พลังงาน และการเจริญเติบโตของร่างกายกับสมองในวัยเด็ก`,
+    deficiency:`ในเด็กทำให้เกิดภาวะเครตินิซึม (ร่างกายแคระแกร็น สติปัญญาบกพร่อง) ส่วนในผู้ใหญ่ทำให้เฉื่อยชา อ้วนบวม ทนหนาวไม่ได้ เรียกว่ามิกซีดีมา`,
+    excess:`ทำให้เกิดภาวะต่อมไทรอยด์ทำงานเกิน เช่น โรคเกรฟส์ (Graves' disease) ใจสั่น มือสั่น น้ำหนักลดเร็ว ตาโปน ขี้ร้อนง่าย`,
+    correct:`ใช่แล้ว! ปลาตัวนี้แหละ กินแล้วคงกระปรี้กระเปร่าขึ้นเยอะเลย ขอบใจมากนะหนู`,
+    wrong:`เอ่อ...ปลาตัวนี้ไม่ใช่ตัวที่น้าต้องการนะ ลองใหม่อีกทีได้ไหม`
+  },
+  {
+    id:'gh', name:'โกรทฮอร์โมน', gland:'ต่อมใต้สมองส่วนหน้า',
+    color:'#69DB7C', colorDark:'#2B8A3E', size:1.35, tail:'fork', fin:'normal', pattern:'none',
+    customerName:'แม่ของน้องพลอย', customerEmoji:'👩',
+    request:`ลูกสาวของฉันอายุเท่าเพื่อนในห้องเลยนะ แต่ตัวเล็กเตี้ยกว่าเพื่อนมากๆ พาไปหาหมอ หมอบอกว่าฮอร์โมนตัวหนึ่งที่ช่วยเรื่องการเจริญเติบโตหลั่งออกมาน้อยไปหน่อย`,
+    func:`กระตุ้นการเจริญเติบโตของกระดูกและกล้ามเนื้อทั่วร่างกาย โดยเฉพาะในวัยเด็กและวัยรุ่น`,
+    deficiency:`เมื่อขาดในวัยเด็ก ทำให้ร่างกายเจริญเติบโตช้ากว่าปกติ เกิดภาวะเตี้ยแคระ (Pituitary dwarfism)`,
+    excess:`เมื่อมากเกินในวัยเด็ก ทำให้ตัวสูงใหญ่ผิดปกติ เรียกว่ายักษ์ (Gigantism) ส่วนถ้าเกินในวัยผู้ใหญ่ที่กระดูกหยุดยาวแล้ว จะทำให้กระดูกใบหน้า มือ เท้าหนาใหญ่ผิดปกติ เรียกว่าอะโครเมกาลี`,
+    correct:`เย้! ใช่ตัวนี้เลยค่ะ ขอบคุณมากนะคะ หวังว่าลูกจะโตทันเพื่อนเร็วๆ นี้`,
+    wrong:`อ้าว...ปลาตัวนี้ไม่ใช่ตัวที่หมอแนะนำนะคะ ลองดูใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'adrenaline', name:'อะดรีนาลิน', gland:'ต่อมหมวกไตส่วนใน (Adrenal medulla)',
+    color:'#FF6B6B', colorDark:'#C92A2A', size:0.9, tail:'fork', fin:'spiky', pattern:'none',
+    customerName:'พี่ตำรวจสมชาย', customerEmoji:'👮',
+    request:`งานพี่ต้องเจอสถานการณ์คับขันบ่อยมาก แต่ช่วงนี้เจอเหตุด่วนทีไร ตัวเองกลับไม่ค่อยตื่นตัว หัวใจไม่เต้นแรงขึ้นเหมือนที่ควรจะเป็นเลย รู้สึกตอบสนองช้าผิดปกติ`,
+    func:`กระตุ้นการตอบสนองแบบสู้หรือหนี (Fight or flight) เพิ่มอัตราการเต้นของหัวใจ ความดันเลือด และระดับน้ำตาลในเลือดอย่างรวดเร็วในภาวะฉุกเฉินหรือตื่นเต้น`,
+    deficiency:`เมื่อขาด ร่างกายตอบสนองต่อสถานการณ์ฉุกเฉินหรือความเครียดเฉียบพลันได้ไม่ดี อาจรู้สึกอ่อนเพลีย ไม่กระตือรือร้นในยามคับขัน`,
+    excess:`เมื่อมากเกิน จะทำให้ใจสั่น ความดันโลหิตสูง มือสั่น วิตกกังวลง่าย นอนไม่หลับ`,
+    correct:`เยี่ยม! ปลาตัวนี้แหละที่พี่ต้องการ กินแล้วคงกลับมาไวใจสู้ได้เหมือนเดิม ขอบใจนะน้อง`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่อ่ะ พี่ว่าไม่ตรงกับที่ต้องการนะ ลองใหม่อีกทีนะ`
+  },
+  {
+    id:'cortisol', name:'คอร์ติซอล', gland:'ต่อมหมวกไตส่วนนอก (Adrenal cortex)',
+    color:'#DA77F2', colorDark:'#862E9C', size:1.0, tail:'fan', fin:'normal', pattern:'stripes',
+    customerName:'พี่ออย พนักงานบริษัท', customerEmoji:'🧑‍💼',
+    request:`ช่วงนี้เครียดสะสมจากงานหนักมาก อ่อนเพลียตลอดเวลา ผิวเริ่มคล้ำขึ้นผิดปกติทั้งที่ไม่ค่อยได้ออกแดด แล้วก็รู้สึกความดันต่ำ หน้ามืดบ่อยด้วย`,
+    func:`เพิ่มระดับน้ำตาลในเลือด ควบคุมการเผาผลาญสารอาหาร ลดการอักเสบ และช่วยร่างกายรับมือกับความเครียดในระยะยาว`,
+    deficiency:`เมื่อขาด เกิดโรคแอดดิสัน (Addison's disease) อ่อนเพลีย ผิวคล้ำผิดปกติ ความดันโลหิตต่ำ`,
+    excess:`เมื่อมากเกิน เกิดโรคคุชชิง (Cushing's syndrome) อ้วนเฉพาะลำตัวและใบหน้ากลม มีรอยแตกลายที่หน้าท้อง ความดันโลหิตสูง`,
+    correct:`โอ้ ใช่เลยครับ ปลาตัวนี้แหละ กินแล้วคงรู้สึกดีขึ้นเยอะ ขอบคุณมากนะครับ`,
+    wrong:`เอ่อ...ผมว่าปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะครับ ลองดูใหม่อีกทีได้ไหมครับ`
+  },
+  {
+    id:'adh', name:'ฮอร์โมนต้านการขับปัสสาวะ (ADH)', short:'ADH', gland:'ต่อมใต้สมองส่วนหลัง (สร้างจากไฮโพทาลามัส)',
+    color:'#3BC9DB', colorDark:'#0B7285', size:0.9, tail:'fan', fin:'normal', pattern:'spots',
+    customerName:'เจน นักวิ่งมาราธอน', customerEmoji:'🏃',
+    request:`ช่วงซ้อมวิ่งหนักๆ เจนปัสสาวะบ่อยมากทั้งวันทั้งคืนเลย แล้วก็กระหายน้ำตลอดเวลา ทั้งที่ตรวจน้ำตาลในเลือดก็ปกติดีนะ ไม่ใช่เบาหวานแน่ๆ`,
+    func:`กระตุ้นให้ท่อไตดูดน้ำกลับเข้าสู่ร่างกายมากขึ้น ช่วยลดปริมาณปัสสาวะและรักษาสมดุลน้ำในร่างกาย`,
+    deficiency:`เมื่อขาด ไตดูดน้ำกลับไม่ได้ ทำให้ปัสสาวะออกมากผิดปกติและกระหายน้ำมาก เรียกว่าเบาจืด (Diabetes insipidus)`,
+    excess:`เมื่อมากเกิน ร่างกายจะคั่งน้ำมากเกินไป ปัสสาวะออกน้อยลง และเสี่ยงต่อภาวะโซเดียมในเลือดต่ำ`,
+    correct:`เย่ ใช่แล้ว! ปลาตัวนี้แหละที่เจนตามหา ทานแล้วน่าจะช่วยได้เยอะเลย ขอบคุณนะ`,
+    wrong:`อ่ะ ปลาตัวนี้ไม่ใช่ตัวที่เจนอยากได้นะ ลองหาใหม่อีกทีได้ไหม`
+  },
+  {
+    id:'pth', name:'พาราทอร์โมน (PTH)', short:'PTH', gland:'ต่อมพาราไทรอยด์',
+    color:'#FFD43B', colorDark:'#B8860B', size:0.8, tail:'fork', fin:'normal', pattern:'spots',
+    customerName:'เชฟกล้า', customerEmoji:'👨‍🍳',
+    request:`เวลาทำอาหารนานๆ มือของเชฟจะเริ่มชาแล้วกระตุกเกร็งจนบางทีจับมีดแทบไม่ได้เลย ไปตรวจเลือดหมอบอกว่าแคลเซียมในเลือดต่ำกว่าปกติ`,
+    func:`เพิ่มระดับแคลเซียมในเลือด โดยกระตุ้นการสลายแคลเซียมจากกระดูกและเพิ่มการดูดกลับที่ไต`,
+    deficiency:`เมื่อขาด ระดับแคลเซียมในเลือดต่ำ ทำให้กล้ามเนื้อกระตุกเกร็ง เรียกว่าภาวะเทตานี (Tetany) รุนแรงอาจถึงขั้นชักได้`,
+    excess:`เมื่อมากเกิน ทำให้แคลเซียมในเลือดสูง กระดูกเปราะบาง และเสี่ยงต่อการเกิดนิ่วในไต`,
+    note:`หมายเหตุ: ฮอร์โมนที่ทำหน้าที่ตรงข้ามกันคือแคลซิโทนิน (Calcitonin) จากต่อมไทรอยด์ ซึ่งช่วยลดระดับแคลเซียมในเลือด`,
+    correct:`ใช่เลยครับ! ปลาตัวนี้แหละ กินแล้วมือคงไม่ชาอีกแล้ว ขอบคุณมากนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่เชฟต้องการนะ ลองจับปลาตัวใหม่ดูอีกทีนะ`
+  },
+  {
+    id:'melatonin', name:'เมลาโทนิน', gland:'ต่อมไพเนียล',
+    color:'#7C83FD', colorDark:'#3730A3', size:1.0, tail:'fan', fin:'normal', pattern:'stars',
+    customerName:'น้องมิ้นต์ นักเรียน', customerEmoji:'🧑‍🎓',
+    request:`ช่วงนี้นอนไม่ค่อยหลับเลยค่ะ ตื่นกลางดึกบ่อยมาก วงจรการนอนป่วนไปหมด พอถึงเวลาเรียนก็ง่วงสุดๆ`,
+    func:`ควบคุมวงจรการนอนหลับ-ตื่น (Circadian rhythm) โดยหลั่งมากขึ้นเมื่อแสงน้อยลงในเวลากลางคืน ทำให้ร่างกายรู้สึกง่วง`,
+    deficiency:`เมื่อขาด วงจรการนอนหลับแปรปรวน นอนหลับยาก ตื่นกลางดึกบ่อย`,
+    excess:`เมื่อมากเกิน อาจทำให้ง่วงซึมมากเกินไปหรือมึนงงในช่วงกลางวัน`,
+    correct:`ขอบคุณค่ะ! ปลาตัวนี้แหละที่หนูตามหา คืนนี้คงหลับสบายขึ้นแน่ๆ`,
+    wrong:`อืม...ปลาตัวนี้ไม่ใช่ตัวที่หนูอยากได้นะคะ ลองจับใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'estrogen', name:'เอสโตรเจน', gland:'รังไข่ (Ovary)',
+    color:'#F783AC', colorDark:'#A61E4D', size:0.95, tail:'veil', fin:'normal', pattern:'none',
+    customerName:'คุณครูหน่อย', customerEmoji:'👩‍🏫',
+    request:`ช่วงนี้ประจำเดือนมาไม่ปกติเลย แล้วก็รู้สึกว่ากระดูกเปราะบางง่ายกว่าเดิมมากด้วยค่ะ หมอแนะนำให้ลองดูแลเรื่องฮอร์โมนตัวนี้`,
+    func:`ควบคุมลักษณะเพศหญิงขั้นที่สอง และควบคุมวงจรการตกไข่กับประจำเดือน รวมถึงช่วยรักษาความหนาแน่นของมวลกระดูก`,
+    deficiency:`เมื่อขาด ประจำเดือนมาไม่ปกติ และเสี่ยงต่อภาวะกระดูกพรุนง่ายขึ้น`,
+    excess:`เมื่อมากเกิน อาจทำให้ประจำเดือนผิดปกติและเพิ่มความเสี่ยงต่อปัญหาสุขภาพบางอย่างได้เช่นกัน`,
+    correct:`ขอบคุณมากค่ะ! ปลาตัวนี้แหละที่ครูต้องการพอดีเลย`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ครูอยากได้นะคะ ลองใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'prolactin', name:'โพรแลกติน (Prolactin)', gland:'ต่อมใต้สมองส่วนหน้า (Anterior pituitary)',
+    color:'#FFB4C6', colorDark:'#D6547A', size:0.95, tail:'fan', fin:'normal', pattern:'none',
+    customerName:'คุณแม่มือใหม่ใบเตย', customerEmoji:'🤱',
+    request:`หลังคลอดน้องมาหลายสัปดาห์แล้ว แต่น้ำนมกลับมีน้อยมาก ให้นมลูกได้ไม่พอ อยากได้ปลาที่ช่วยกระตุ้นการสร้างน้ำนมหน่อยค่ะ`,
+    func:`กระตุ้นการสร้างน้ำนมในต่อมน้ำนมของเพศหญิงหลังคลอดบุตร`,
+    deficiency:`เมื่อขาด ร่างกายผลิตน้ำนมได้ไม่เพียงพอสำหรับเลี้ยงลูกหลังคลอด`,
+    excess:`เมื่อมากเกิน (ภาวะโพรแลกตินสูง) อาจทำให้ประจำเดือนผิดปกติ มีน้ำนมไหลผิดปกติทั้งที่ไม่ได้ตั้งครรภ์ และภาวะเจริญพันธุ์ลดลง`,
+    correct:`ขอบคุณมากค่ะ! ปลาตัวนี้แหละที่ต้องการพอดี หวังว่าน้ำนมจะมาเพิ่มขึ้นนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะคะ ลองจับใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'tsh', name:'TSH (ฮอร์โมนกระตุ้นไทรอยด์)', short:'TSH', gland:'ต่อมใต้สมองส่วนหน้า (Anterior pituitary)',
+    color:'#4DD0C4', colorDark:'#00786B', size:0.85, tail:'fork', fin:'normal', pattern:'stripes',
+    customerName:'ลุงเจริญ', customerEmoji:'👴',
+    request:`ช่วงนี้ลุงเหนื่อยง่าย เฉื่อยชาเหมือนพลังงานร่างกายลดลง หมอบอกว่าต่อมไทรอยด์ของลุงไม่ค่อยถูกกระตุ้นให้ทำงานเท่าที่ควร อยากได้ปลาตัวที่ไปสั่งงานต่อมไทรอยด์โดยตรงเลย`,
+    func:`กระตุ้นต่อมไทรอยด์ให้สร้างและหลั่งฮอร์โมนไทรอยด์ (ไทรอกซินและ T3) ออกมา`,
+    deficiency:`เมื่อขาด ต่อมไทรอยด์ไม่ถูกกระตุ้นให้ทำงาน ทำให้เกิดภาวะไทรอยด์ทำงานต่ำตามมา อ่อนเพลีย เฉื่อยชา`,
+    excess:`เมื่อมากเกิน จะกระตุ้นให้ต่อมไทรอยด์ทำงานมากเกินไป ทำให้เกิดภาวะไทรอยด์เป็นพิษตามมา ใจสั่น น้ำหนักลด`,
+    correct:`ใช่เลย! ปลาตัวนี้แหละ ลุงว่าพลังงานคงกลับมาแน่ๆ ขอบใจนะ`,
+    wrong:`เอ่อ ปลาตัวนี้ไม่ใช่ตัวที่ลุงต้องการนะ ลองใหม่อีกทีได้ไหม`
+  },
+  {
+    id:'acth', name:'ACTH (ฮอร์โมนกระตุ้นต่อมหมวกไต)', short:'ACTH', gland:'ต่อมใต้สมองส่วนหน้า (Anterior pituitary)',
+    color:'#C77DFF', colorDark:'#7B2CBF', size:0.8, tail:'fan', fin:'normal', pattern:'spots',
+    customerName:'พี่หนึ่ง นักกีฬา', customerEmoji:'🏋️',
+    request:`ช่วงนี้พี่อ่อนเพลียมากผิดปกติ ความดันก็ต่ำ หมอตรวจแล้วบอกว่าปัญหาไม่ได้อยู่ที่ต่อมหมวกไตโดยตรง แต่อยู่ที่ฮอร์โมนจากสมองที่ทำหน้าที่สั่งงานต่อมหมวกไตอีกที`,
+    func:`กระตุ้นต่อมหมวกไตชั้นนอกให้สร้างและหลั่งคอร์ติซอลออกมา`,
+    deficiency:`เมื่อขาด ต่อมหมวกไตไม่ถูกกระตุ้น ทำให้คอร์ติซอลต่ำตามมา อ่อนเพลีย ความดันโลหิตต่ำ`,
+    excess:`เมื่อมากเกิน จะกระตุ้นให้คอร์ติซอลสูงเกินไป ทำให้เกิดกลุ่มอาการคุชชิงตามมา`,
+    correct:`เยี่ยม! ปลาตัวนี้แหละที่พี่ต้องการ ขอบใจนะน้อง`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่อ่ะ พี่ว่าไม่ตรงกับที่ต้องการนะ ลองใหม่อีกทีนะ`
+  },
+  {
+    id:'fsh', name:'FSH (ฮอร์โมนกระตุ้นรูขุมขน)', short:'FSH', gland:'ต่อมใต้สมองส่วนหน้า (Anterior pituitary)',
+    color:'#FFD6A5', colorDark:'#D68438', size:0.8, tail:'fork', fin:'normal', pattern:'none',
+    customerName:'คุณสุดา', customerEmoji:'👩‍❤️‍👨',
+    request:`แต่งงานมาหลายปีแล้วแต่ยังไม่มีลูกสักที หมอบอกว่าฮอร์โมนที่ช่วยกระตุ้นการสร้างไข่ในตัวดิฉันหลั่งออกมาน้อยไปหน่อยค่ะ`,
+    func:`กระตุ้นการสร้างไข่ในรังไข่ของเพศหญิง และกระตุ้นการสร้างอสุจิในอัณฑะของเพศชาย`,
+    deficiency:`เมื่อขาด การสร้างไข่หรืออสุจิลดลง อาจทำให้มีบุตรยาก`,
+    excess:`เมื่อมากเกิน อาจพบได้ในภาวะรังไข่หรืออัณฑะทำงานบกพร่อง ร่างกายพยายามกระตุ้นชดเชยมากขึ้น`,
+    correct:`ขอบคุณมากค่ะ! ปลาตัวนี้แหละที่ต้องการพอดีเลย`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะคะ ลองใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'lh', name:'LH (ฮอร์โมนลูทีไนซิง)', short:'LH', gland:'ต่อมใต้สมองส่วนหน้า (Anterior pituitary)',
+    color:'#F4A261', colorDark:'#B5651D', size:0.8, tail:'fork', fin:'normal', pattern:'spots',
+    customerName:'คุณนิดา', customerEmoji:'🙋‍♀️',
+    request:`รอบเดือนของดิฉันไม่ค่อยสม่ำเสมอ หมอบอกว่าอาจเกี่ยวกับฮอร์โมนตัวที่ไปกระตุ้นการตกไข่โดยตรง ลองหาปลาตัวนั้นให้หน่อยได้ไหมคะ`,
+    func:`กระตุ้นการตกไข่ในเพศหญิง และกระตุ้นการสร้างเทสโทสเตอโรนในเพศชาย`,
+    deficiency:`เมื่อขาด อาจไม่เกิดการตกไข่ หรือระดับเทสโทสเตอโรนต่ำ ส่งผลต่อภาวะเจริญพันธุ์`,
+    excess:`เมื่อมากเกิน อาจรบกวนรอบเดือนหรือสมดุลฮอร์โมนเพศ`,
+    correct:`ขอบคุณค่ะ! ปลาตัวนี้แหละที่ตามหาอยู่พอดี`,
+    wrong:`อืม ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะ ลองสังเกตให้ดีอีกทีนะคะ`
+  },
+  {
+    id:'oxytocin', name:'ออกซิโทซิน', gland:'ต่อมใต้สมองส่วนหลัง (สร้างจากไฮโพทาลามัส)',
+    color:'#FFAFCC', colorDark:'#C9184A', size:0.9, tail:'veil', fin:'normal', pattern:'none',
+    customerName:'คุณแม่ป้ายแดง', customerEmoji:'🤰',
+    request:`ใกล้ครบกำหนดคลอดแล้ว แต่หมอบอกว่ามดลูกบีบตัวช้ากว่าที่ควร อยากได้ปลาที่ช่วยกระตุ้นการบีบตัวของมดลูกและการหลั่งน้ำนมค่ะ`,
+    func:`กระตุ้นการบีบตัวของมดลูกขณะคลอดบุตร กระตุ้นการหลั่งน้ำนม และเสริมสร้างความผูกพันทางสังคม`,
+    deficiency:`เมื่อขาด การคลอดบุตรอาจล่าช้าเพราะมดลูกบีบตัวไม่ดี และการหลั่งน้ำนมอาจติดขัด`,
+    excess:`เมื่อมากเกิน อาจทำให้มดลูกบีบตัวถี่หรือแรงเกินไป`,
+    correct:`ขอบคุณมากค่ะ! หวังว่าจะคลอดง่ายขึ้นนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะคะ ลองใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'t3', name:'T3 (ไทรไอโอโดไทโรนีน)', short:'T3', gland:'ต่อมไทรอยด์',
+    color:'#FFC078', colorDark:'#E8590C', size:0.85, tail:'fan', fin:'normal', pattern:'none',
+    customerName:'น้องเบล', customerEmoji:'🧑',
+    request:`ช่วงนี้เฉื่อยชา ทนหนาวไม่ค่อยได้ อ่อนเพลียง่าย หมอบอกว่าฮอร์โมนไทรอยด์ตัวที่ออกฤทธิ์เร็วและแรงที่สุดของหนูต่ำไปหน่อย`,
+    func:`ควบคุมอัตราเมแทบอลิซึมของร่างกาย ออกฤทธิ์คล้ายไทรอกซิน (T4) แต่มีฤทธิ์แรงและไวกว่า`,
+    deficiency:`เมื่อขาด ร่างกายเมแทบอลิซึมช้าลง เฉื่อยชา คล้ายภาวะขาดไทรอกซิน`,
+    excess:`เมื่อมากเกิน ร่างกายเผาผลาญเร็วเกินไป ใจสั่น น้ำหนักลด กระวนกระวาย`,
+    correct:`ขอบคุณค่ะ! ปลาตัวนี้แหละที่ต้องการพอดีเลย`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะ ลองจับใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'aldosterone', name:'อัลโดสเตอโรน', gland:'ต่อมหมวกไตชั้นนอก (Adrenal cortex)',
+    color:'#90BE6D', colorDark:'#4D7C3B', size:0.85, tail:'fork', fin:'normal', pattern:'stripes',
+    customerName:'ป้าอำไพ', customerEmoji:'👵',
+    request:`ช่วงนี้ป้าเวียนหัวบ่อย ความดันต่ำ อ่อนแรง หมอตรวจเจอว่าโพแทสเซียมในเลือดสูงผิดปกติ บอกว่าเป็นเพราะฮอร์โมนตัวที่ควบคุมเกลือแร่ในร่างกายต่ำไป`,
+    func:`ควบคุมสมดุลเกลือแร่ (โซเดียมและโพแทสเซียม) และควบคุมความดันเลือด โดยกระตุ้นการดูดโซเดียมกลับที่ไต`,
+    deficiency:`เมื่อขาด ร่างกายสูญเสียโซเดียมและน้ำมากเกินไป ความดันโลหิตต่ำ อ่อนเพลีย โพแทสเซียมในเลือดสูง`,
+    excess:`เมื่อมากเกิน ร่างกายคั่งโซเดียมและน้ำ ความดันโลหิตสูง โพแทสเซียมในเลือดต่ำ`,
+    correct:`นี่แหละปลาที่ป้าตามหา ขอบใจจ้ะหนู`,
+    wrong:`อืม ป้าว่าปลาตัวนี้ไม่ใช่ตัวที่อยากได้นะ ลองสังเกตให้ดีอีกทีนะจ๊ะ`
+  },
+  {
+    id:'dhea', name:'DHEA', short:'DHEA', gland:'ต่อมหมวกไตชั้นนอก (Adrenal cortex)',
+    color:'#B5838D', colorDark:'#6D435A', size:0.85, tail:'fan', fin:'normal', pattern:'none',
+    customerName:'คุณลุงประยูร', customerEmoji:'👨‍🦳',
+    request:`ช่วงนี้ลุงรู้สึกอ่อนแรง กล้ามเนื้อลีบลงเรื่อยๆ ทั้งที่ยังออกกำลังกายสม่ำเสมอ หมอบอกว่าสารตั้งต้นที่ร่างกายใช้สร้างฮอร์โมนเพศของลุงต่ำไปหน่อย`,
+    func:`เป็นสารตั้งต้นที่ร่างกายนำไปสร้างฮอร์โมนเพศ (เอสโตรเจนและเทสโทสเตอโรน) ต่อ`,
+    deficiency:`เมื่อขาด ร่างกายอาจสร้างฮอร์โมนเพศได้น้อยลง อ่อนเพลีย มวลกล้ามเนื้อลดลง`,
+    excess:`เมื่อมากเกิน อาจทำให้เกิดลักษณะแบบเพศชายมากขึ้นในเพศหญิง เช่น สิวหรือขนดก`,
+    correct:`ใช่เลย! ปลาตัวนี้แหละ ขอบใจมากนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ลุงต้องการนะ ลองใหม่อีกทีได้ไหม`
+  },
+  {
+    id:'noradrenaline', name:'นอร์อะดรีนาลิน', gland:'ต่อมหมวกไตชั้นใน (Adrenal medulla)',
+    color:'#E76F51', colorDark:'#9C3D24', size:0.85, tail:'fork', fin:'spiky', pattern:'none',
+    customerName:'กัปตันวินัย', customerEmoji:'🧑‍✈️',
+    request:`ทำงานกะดึกมาหลายปี ช่วงนี้ตื่นตัวได้ไม่ดีเหมือนก่อน ความดันก็ต่ำ สมาธิหลุดง่าย หมอบอกว่าฮอร์โมนตัวที่ช่วยเพิ่มความตื่นตัวและหดหลอดเลือดของผมต่ำไปหน่อย`,
+    func:`เพิ่มความตื่นตัวของร่างกายและสมอง ทำให้หลอดเลือดหดตัวเพื่อเพิ่มความดันเลือด ทำงานร่วมกับอะดรีนาลินในการตอบสนองต่อความเครียด`,
+    deficiency:`เมื่อขาด ร่างกายอาจตื่นตัวได้ไม่ดี ความดันเลือดต่ำ สมาธิลดลง`,
+    excess:`เมื่อมากเกิน ความดันโลหิตสูง ใจสั่น วิตกกังวล`,
+    correct:`เยี่ยมเลย! ปลาตัวนี้แหละ ขอบคุณมากนะครับ`,
+    wrong:`เอ่อ ปลาตัวนี้ไม่ใช่ตัวที่ผมต้องการนะ ลองใหม่อีกทีได้ไหมครับ`
+  },
+  {
+    id:'somatostatin', name:'โซมาโทสแตติน', gland:'ตับอ่อน (เซลล์เดลตา)',
+    color:'#ADB5BD', colorDark:'#495057', size:0.75, tail:'fork', fin:'normal', pattern:'spots',
+    customerName:'หมอต้อม', customerEmoji:'🧑‍⚕️',
+    request:`ตรวจน้ำตาลในเลือดของตัวเองแล้วพบว่าแกว่งขึ้นลงไม่สม่ำเสมอเลย ทั้งอินซูลินและกลูคากอนดูเหมือนจะหลั่งไม่ประสานกัน คิดว่าฮอร์โมนตัวที่คอยควบคุมสมดุลของทั้งคู่ต่ำไปหน่อย`,
+    func:`ยับยั้งการหลั่งอินซูลินและกลูคากอน ช่วยควบคุมสมดุลการหลั่งฮอร์โมนทั้งสองให้พอดี`,
+    deficiency:`เมื่อขาด การหลั่งอินซูลินและกลูคากอนอาจไม่สมดุล ควบคุมน้ำตาลในเลือดได้ไม่ดี`,
+    excess:`เมื่อมากเกิน อาจไปยับยั้งอินซูลินและกลูคากอนมากเกินไป ทำให้ควบคุมน้ำตาลลำบาก`,
+    correct:`ใช่เลยครับ! ปลาตัวนี้แหละ ขอบคุณมากนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะ ลองจับปลาตัวใหม่ดูอีกทีนะ`
+  },
+  {
+    id:'progesterone', name:'โปรเจสเตอโรน', gland:'รังไข่ (Ovary)',
+    color:'#E0AFA0', colorDark:'#8A5A4A', size:0.9, tail:'veil', fin:'normal', pattern:'none',
+    customerName:'คุณวรรณา', customerEmoji:'🤰',
+    request:`ตั้งครรภ์ได้ไม่นานแล้วแท้งไปสองครั้งค่ะ หมอบอกว่าฮอร์โมนที่ช่วยเตรียมมดลูกและพยุงครรภ์ของดิฉันต่ำไปหน่อย`,
+    func:`เตรียมเยื่อบุมดลูกให้พร้อมสำหรับการฝังตัวของตัวอ่อน และช่วยรักษาสภาพการตั้งครรภ์`,
+    deficiency:`เมื่อขาด เยื่อบุมดลูกอาจไม่พร้อมรองรับการตั้งครรภ์ เสี่ยงต่อการแท้งในระยะแรก ประจำเดือนมาไม่สม่ำเสมอ`,
+    excess:`เมื่อมากเกิน อาจทำให้อารมณ์แปรปรวน ท้องอืด คัดตึงเต้านม`,
+    correct:`ขอบคุณมากค่ะ หวังว่าครั้งนี้จะปลอดภัยตลอดนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะคะ ลองใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'relaxin', name:'รีแลกซิน', gland:'รังไข่และรก (ช่วงตั้งครรภ์)',
+    color:'#F1C0E8', colorDark:'#9D4EDD', size:0.8, tail:'veil', fin:'normal', pattern:'none',
+    customerName:'คุณแม่ใกล้คลอดอ้อย', customerEmoji:'🤰',
+    request:`ใกล้ครบกำหนดคลอดแล้ว แต่หมอบอกว่าข้อต่อกระดูกเชิงกรานยังไม่ค่อยยืดหยุ่นเท่าที่ควร อยากได้ปลาที่ช่วยเรื่องนี้ก่อนคลอดค่ะ`,
+    func:`ช่วยคลายกล้ามเนื้อและเอ็นบริเวณมดลูกและกระดูกเชิงกราน เตรียมพร้อมสำหรับการคลอดบุตร`,
+    deficiency:`เมื่อขาด กระดูกเชิงกรานและปากมดลูกอาจไม่ยืดหยุ่นพอ ทำให้การคลอดบุตรเป็นไปได้ยากขึ้น`,
+    excess:`เมื่อมากเกิน ข้อต่อและเอ็นอาจหย่อนยานเกินไป เสี่ยงต่อการบาดเจ็บ`,
+    correct:`ขอบคุณค่ะ! หวังว่าจะคลอดง่ายขึ้นนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะคะ ลองใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'testosterone', name:'เทสโทสเตอโรน', gland:'อัณฑะ (Testis)',
+    color:'#274C77', colorDark:'#12233D', size:1.1, tail:'fork', fin:'spiky', pattern:'none',
+    customerName:'น้องปอนด์ วัยรุ่น', customerEmoji:'🧑',
+    request:`อายุเท่าเพื่อนในห้องแล้ว แต่ลักษณะความเป็นหนุ่มยังไม่ค่อยชัดเจนเท่าเพื่อนๆ เลย เสียงก็ยังไม่ค่อยแตก หมอบอกว่าฮอร์โมนเพศชายหลักของผมต่ำไปหน่อย`,
+    func:`พัฒนาลักษณะเพศชาย เช่น เสียงห้าว มวลกล้ามเนื้อ ขนตามร่างกาย และกระตุ้นการสร้างอสุจิ`,
+    deficiency:`เมื่อขาด มวลกล้ามเนื้อลดลง อ่อนเพลีย ความต้องการทางเพศลดลง พัฒนาการทางเพศชายล่าช้าในวัยรุ่น`,
+    excess:`เมื่อมากเกิน อาจก้าวร้าวง่ายขึ้น สิวขึ้นมาก และเสี่ยงต่อภาวะมีบุตรยากจากการไปยับยั้งฮอร์โมนอื่น`,
+    correct:`เย่! ใช่ตัวนี้เลย ขอบคุณมากนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ผมต้องการนะ ลองจับใหม่อีกทีนะ`
+  },
+  {
+    id:'inhibin', name:'อินฮิบิน', gland:'อัณฑะ/รังไข่',
+    color:'#7D98A1', colorDark:'#3E5C66', size:0.75, tail:'fork', fin:'normal', pattern:'spots',
+    customerName:'คุณหมอเจนจิรา', customerEmoji:'🧑‍⚕️',
+    request:`ตรวจฮอร์โมนของตัวเองแล้วพบว่า FSH สูงผิดปกติ หมอบอกว่าฮอร์โมนตัวที่คอยยับยั้ง FSH ของดิฉันต่ำไปหน่อย`,
+    func:`ยับยั้งการหลั่ง FSH จากต่อมใต้สมอง ช่วยควบคุมสมดุลการสร้างอสุจิหรือไข่ไม่ให้มากเกินไป`,
+    deficiency:`เมื่อขาด FSH อาจหลั่งออกมามากเกินควบคุม ส่งผลต่อสมดุลการสร้างเซลล์สืบพันธุ์`,
+    excess:`เมื่อมากเกิน อาจไปกด FSH ต่ำเกินไป ส่งผลต่อภาวะเจริญพันธุ์`,
+    correct:`ขอบคุณค่ะ! ปลาตัวนี้แหละที่ต้องการพอดีเลย`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะคะ ลองใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'gastrin', name:'แกสทริน', gland:'กระเพาะอาหาร (Stomach)',
+    color:'#F6BD60', colorDark:'#B8860B', size:0.85, tail:'fork', fin:'normal', pattern:'spots',
+    customerName:'ลุงบุญมี', customerEmoji:'👨‍🦳',
+    request:`ช่วงนี้กินอะไรก็ไม่ค่อยย่อย ท้องอืดท้องเฟ้อตลอด หมอบอกว่ากระเพาะของลุงหลั่งกรดออกมาน้อยไปหน่อย`,
+    func:`กระตุ้นการหลั่งกรดในกระเพาะอาหารเพื่อช่วยย่อยอาหาร`,
+    deficiency:`เมื่อขาด กรดในกระเพาะน้อยเกินไป ย่อยอาหารได้ไม่ดี อาหารไม่ย่อย ท้องอืด`,
+    excess:`เมื่อมากเกิน กรดในกระเพาะมากเกินไป เสี่ยงต่อแผลในกระเพาะอาหาร`,
+    correct:`ใช่เลย! ปลาตัวนี้แหละ ขอบใจมากนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ลุงต้องการนะ ลองใหม่อีกทีได้ไหม`
+  },
+  {
+    id:'secretin', name:'ซีครีติน', gland:'ลำไส้เล็กส่วนต้น (Duodenum)',
+    color:'#84A98C', colorDark:'#3F6B4C', size:0.8, tail:'fan', fin:'normal', pattern:'none',
+    customerName:'ป้าทองใบ', customerEmoji:'👵',
+    request:`ช่วงนี้ปวดแสบท้องบ่อยหลังกินข้าว หมอบอกว่าลำไส้เล็กของป้าหลั่งฮอร์โมนที่ช่วยลดความเป็นกรดของอาหารได้น้อยไปหน่อย`,
+    func:`กระตุ้นตับอ่อนให้หลั่งสารไบคาร์บอเนตเพื่อลดความเป็นกรดของอาหารที่มาจากกระเพาะ`,
+    deficiency:`เมื่อขาด อาหารที่เป็นกรดจากกระเพาะไม่ถูกปรับสภาพ อาจระคายเคืองลำไส้เล็ก ย่อยอาหารได้ไม่ดี`,
+    excess:`เมื่อมากเกิน อาจรบกวนสมดุลกรด-ด่างในระบบย่อยอาหาร`,
+    correct:`นี่แหละปลาที่ป้าตามหา ขอบใจจ้ะหนู`,
+    wrong:`อืม ป้าว่าปลาตัวนี้ไม่ใช่ตัวที่อยากได้นะ ลองสังเกตให้ดีอีกทีนะจ๊ะ`
+  },
+  {
+    id:'cck', name:'CCK (โคเลซิสโตไคนิน)', short:'CCK', gland:'ลำไส้เล็กส่วนต้น (Duodenum)',
+    color:'#F9C74F', colorDark:'#C9930A', size:0.85, tail:'fork', fin:'normal', pattern:'stripes',
+    customerName:'น้าสมบัติ', customerEmoji:'🧔',
+    request:`กินอาหารมันๆ ทีไรจุกท้อง ย่อยไม่ค่อยดี แล้วก็รู้สึกไม่อิ่มสักที กินเยอะกว่าปกติทุกมื้อเลย หมอบอกว่าฮอร์โมนที่ช่วยย่อยไขมันและทำให้รู้สึกอิ่มของน้าต่ำไปหน่อย`,
+    func:`กระตุ้นถุงน้ำดีให้บีบตัวปล่อยน้ำดี และกระตุ้นตับอ่อนให้หลั่งเอนไซม์ย่อยอาหาร รวมถึงทำให้รู้สึกอิ่ม`,
+    deficiency:`เมื่อขาด การย่อยไขมันทำได้ไม่ดี และอาจรู้สึกอิ่มช้าลง กินเยอะเกินความจำเป็น`,
+    excess:`เมื่อมากเกิน อาจทำให้อิ่มเร็วเกินไปจนกินอาหารได้น้อย`,
+    correct:`ใช่เลย! ปลาตัวนี้แหละ ขอบใจมากนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่น้าต้องการนะ ลองใหม่อีกทีได้ไหม`
+  },
+  {
+    id:'ghrelin', name:'เกรลิน', gland:'กระเพาะอาหาร (Stomach)',
+    color:'#FF9F1C', colorDark:'#B85C00', size:0.8, tail:'fork', fin:'normal', pattern:'none',
+    customerName:'คุณเมย์', customerEmoji:'🙋‍♀️',
+    request:`ช่วงนี้ไม่ค่อยรู้สึกหิวเลยค่ะ กินอาหารได้น้อยมาก น้ำหนักลดลงเรื่อยๆ ทั้งที่ไม่ได้ตั้งใจลดน้ำหนัก หมอบอกว่าฮอร์โมนที่กระตุ้นความหิวของดิฉันต่ำไปหน่อย`,
+    func:`กระตุ้นความรู้สึกหิว ทำให้อยากอาหาร มักหลั่งมากขึ้นก่อนมื้ออาหาร`,
+    deficiency:`เมื่อขาด อาจไม่ค่อยรู้สึกหิว เบื่ออาหาร กินอาหารได้น้อยเกินไป น้ำหนักลด`,
+    excess:`เมื่อมากเกิน อาจหิวบ่อยเกินไป กินมากเกินความจำเป็น`,
+    correct:`ขอบคุณค่ะ! ปลาตัวนี้แหละที่ต้องการพอดีเลย`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะคะ ลองใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'leptin', name:'เลปติน', gland:'เซลล์ไขมัน (Adipose tissue)',
+    color:'#FFCA3A', colorDark:'#B08900', size:0.85, tail:'fan', fin:'normal', pattern:'spots',
+    customerName:'พี่โก้', customerEmoji:'🧑‍🦱',
+    request:`กินอิ่มแค่ไหนก็ยังรู้สึกหิวอยู่ดี กินจุขึ้นเรื่อยๆ จนน้ำหนักขึ้นเยอะ หมอบอกว่าฮอร์โมนจากเซลล์ไขมันที่ช่วยส่งสัญญาณความอิ่มของผมต่ำไปหน่อย`,
+    func:`ทำให้รู้สึกอิ่มและลดความอยากอาหาร ช่วยควบคุมพลังงานและน้ำหนักตัวในระยะยาว`,
+    deficiency:`เมื่อขาด จะรู้สึกหิวตลอดเวลาแม้กินอิ่มแล้ว เสี่ยงต่อการกินมากเกินไปและน้ำหนักเกิน`,
+    excess:`เมื่อมากเกิน (มักพบภาวะดื้อเลปตินร่วมด้วย) ร่างกายอาจไม่ตอบสนองต่อสัญญาณความอิ่มตามปกติ`,
+    correct:`เยี่ยมเลย! ปลาตัวนี้แหละ ขอบคุณมากนะ`,
+    wrong:`เอ่อ ปลาตัวนี้ไม่ใช่ตัวที่ผมต้องการนะ ลองใหม่อีกทีได้ไหม`
+  },
+  {
+    id:'glp1', name:'GLP-1', short:'GLP-1', gland:'ลำไส้เล็ก (Intestine)',
+    color:'#52B69A', colorDark:'#1B4332', size:0.85, tail:'fork', fin:'normal', pattern:'none',
+    customerName:'คุณหมอพิม', customerEmoji:'🧑‍⚕️',
+    request:`น้ำตาลในเลือดหลังมื้ออาหารของดิฉันพุ่งสูงทุกครั้ง ทั้งที่อินซูลินยังปกติดี หมอบอกว่าฮอร์โมนจากลำไส้ที่ช่วยกระตุ้นอินซูลินหลังมื้ออาหารของดิฉันต่ำไปหน่อย`,
+    func:`กระตุ้นการหลั่งอินซูลินหลังมื้ออาหาร ลดความอยากอาหาร และชะลอการเคลื่อนไหวของกระเพาะอาหาร`,
+    deficiency:`เมื่อขาด การหลั่งอินซูลินหลังมื้ออาหารตอบสนองได้ไม่ดี น้ำตาลในเลือดหลังอาหารอาจสูงขึ้นง่าย และหิวบ่อย`,
+    excess:`เมื่อมากเกิน อาจทำให้คลื่นไส้หรืออิ่มเร็วเกินไป`,
+    correct:`ขอบคุณมากค่ะ! ปลาตัวนี้แหละที่ต้องการพอดีเลย`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ต้องการนะคะ ลองใหม่อีกทีได้ไหมคะ`
+  },
+  {
+    id:'epo', name:'EPO (อีริโทรพอยอิติน)', short:'EPO', gland:'ไต (Kidney)',
+    color:'#D00000', colorDark:'#6A040F', size:0.9, tail:'fork', fin:'normal', pattern:'spots',
+    customerName:'ลุงสมาน', customerEmoji:'👨‍🦳',
+    request:`ช่วงนี้ลุงหน้าซีด เหนื่อยง่ายมาก แค่เดินขึ้นบันไดก็หอบแล้ว หมอตรวจเลือดบอกว่าเม็ดเลือดแดงน้อย เพราะฮอร์โมนจากไตที่ช่วยกระตุ้นการสร้างเม็ดเลือดแดงของลุงต่ำไปหน่อย`,
+    func:`กระตุ้นไขกระดูกให้สร้างเซลล์เม็ดเลือดแดงเพิ่มขึ้น`,
+    deficiency:`เมื่อขาด ร่างกายสร้างเม็ดเลือดแดงได้น้อยลง เกิดภาวะโลหิตจาง อ่อนเพลีย หน้าซีด เหนื่อยง่าย`,
+    excess:`เมื่อมากเกิน เลือดอาจข้นเกินไปจากเม็ดเลือดแดงที่มากเกิน เสี่ยงต่อลิ่มเลือดอุดตัน`,
+    correct:`ใช่เลย! ปลาตัวนี้แหละ ขอบใจมากนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ลุงต้องการนะ ลองใหม่อีกทีได้ไหม`
+  },
+  {
+    id:'renin', name:'เรนิน', gland:'ไต (Kidney)',
+    color:'#7209B7', colorDark:'#3C096C', size:0.8, tail:'fork', fin:'normal', pattern:'none',
+    customerName:'น้าประเสริฐ', customerEmoji:'🧔',
+    request:`ช่วงนี้ความดันต่ำบ่อยมาก เวียนหัวเวลาลุกไว หมอบอกว่าฮอร์โมนจากไตที่ช่วยเริ่มระบบควบคุมความดันเลือดของน้าต่ำไปหน่อย`,
+    func:`เริ่มต้นกระบวนการควบคุมความดันเลือด (ระบบ Renin-Angiotensin-Aldosterone) เมื่อความดันต่ำหรือเลือดไปเลี้ยงไตลดลง`,
+    deficiency:`เมื่อขาด ร่างกายตอบสนองต่อภาวะความดันต่ำได้ไม่ดี ควบคุมความดันเลือดลำบาก`,
+    excess:`เมื่อมากเกิน อาจกระตุ้นระบบควบคุมความดันมากเกินไป ทำให้ความดันโลหิตสูง`,
+    correct:`ใช่เลย! ปลาตัวนี้แหละ ขอบใจมากนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่น้าต้องการนะ ลองใหม่อีกทีได้ไหม`
+  },
+  {
+    id:'anp', name:'ANP (เอเอ็นพี)', short:'ANP', gland:'หัวใจ (Heart, ห้องบน)',
+    color:'#FF006E', colorDark:'#8E0045', size:0.85, tail:'fan', fin:'normal', pattern:'stripes',
+    customerName:'ป้าแดง', customerEmoji:'👵',
+    request:`ช่วงนี้ป้าตัวบวมบ่อย ความดันก็สูงขึ้นเรื่อยๆ หมอบอกว่าฮอร์โมนจากหัวใจที่ช่วยขับโซเดียมส่วนเกินออกจากร่างกายของป้าต่ำไปหน่อย`,
+    func:`ลดความดันเลือด โดยกระตุ้นให้ไตขับโซเดียมและน้ำออกมากขึ้น ทำงานตรงข้ามกับระบบเรนิน`,
+    deficiency:`เมื่อขาด ร่างกายขับโซเดียมและน้ำส่วนเกินได้ไม่ดี เสี่ยงต่อภาวะความดันโลหิตสูงและบวมน้ำ`,
+    excess:`เมื่อมากเกิน อาจทำให้ความดันโลหิตต่ำเกินไปและเสียสมดุลเกลือแร่`,
+    correct:`นี่แหละปลาที่ป้าตามหา ขอบใจจ้ะหนู`,
+    wrong:`อืม ป้าว่าปลาตัวนี้ไม่ใช่ตัวที่อยากได้นะ ลองสังเกตให้ดีอีกทีนะจ๊ะ`
+  },
+  {
+    id:'igf1', name:'IGF-1 (ไอจีเอฟ-1)', short:'IGF-1', gland:'ตับ (Liver)',
+    color:'#06D6A0', colorDark:'#04785A', size:1.0, tail:'fork', fin:'normal', pattern:'none',
+    customerName:'น้องพีท', customerEmoji:'🧑‍🎓',
+    request:`ตรวจแล้วโกรทฮอร์โมนของผมปกติดี แต่ร่างกายกลับไม่ค่อยโตตามที่ควรจะเป็น หมอบอกว่าฮอร์โมนจากตับที่ทำงานร่วมกับโกรทฮอร์โมนของผมต่ำไปหน่อย`,
+    func:`ทำงานร่วมกับโกรทฮอร์โมน กระตุ้นการเจริญเติบโตของกระดูกและเนื้อเยื่อทั่วร่างกาย`,
+    deficiency:`เมื่อขาด แม้โกรทฮอร์โมนจะปกติ ร่างกายก็ยังเจริญเติบโตได้ไม่เต็มที่ อาจทำให้ตัวเตี้ยกว่าปกติ`,
+    excess:`เมื่อมากเกิน อาจกระตุ้นการเจริญเติบโตของกระดูกและเนื้อเยื่อมากเกินไป คล้ายภาวะเกินของโกรทฮอร์โมน`,
+    correct:`เย่! ใช่ตัวนี้เลย ขอบคุณมากนะ`,
+    wrong:`เอ๊ะ ปลาตัวนี้ไม่ใช่ตัวที่ผมต้องการนะ ลองจับใหม่อีกทีนะ`
+  },
+];
+
+/* ลูกค้า 5 โปรไฟล์จะสลับกันให้กับฮอร์โมนแต่ละชนิดในแต่ละรอบ
+   จึงได้พบลูกค้าครบ 5 คนโดยไม่ทำให้หนึ่งรอบยาวเกินเล่นสนุก */
+const CUSTOMER_VARIANTS = [
+  { name:null, emoji:null, lead:'', correctLead:'', wrongLead:'' },
+  { name:'น้องมะลิ', emoji:'🧑‍🎓', lead:'น้องมะลิเล่าอาการว่า ', correctLead:'ขอบคุณมากค่ะ! ', wrongLead:'น้องมะลิพยักหน้าแล้วบอกว่า ' },
+  { name:'คุณต้นน้ำ', emoji:'🧑‍💻', lead:'คุณต้นน้ำรีบมาขอความช่วยเหลือ เขาบอกว่า ', correctLead:'โล่งใจเลยครับ! ', wrongLead:'คุณต้นน้ำลองคิดตามแล้วบอกว่า ' },
+  { name:'ป้าวารี', emoji:'👩‍🦳', lead:'ป้าวารีเล่าให้ฟังอย่างกังวลว่า ', correctLead:'ป้าดีใจมากเลย! ', wrongLead:'ป้าวารีขอให้ช่วยดูอีกครั้ง เพราะ ' },
+  { name:'พี่ภพ', emoji:'🧑‍🔧', lead:'พี่ภพบอกว่าช่วงนี้ ', correctLead:'เยี่ยมเลยครับ! ', wrongLead:'พี่ภพส่ายหน้าเบา ๆ เพราะ ' }
+];
+
+const OUTFIT_ITEMS = [
+  { id:'classic', name:'ชุดคลาสสิก', price:0 },
+  { id:'river', name:'ชุดริมแม่น้ำ', price:12 },
+  { id:'sunset', name:'ชุดยามเย็น', price:18 },
+  { id:'forest', name:'ชุดนักสำรวจ', price:24 }
+];
+const ROD_ITEMS = [
+  { id:'classic', name:'เบ็ดไม้เดิม', price:0 },
+  { id:'bamboo', name:'เบ็ดไผ่', price:10 },
+  { id:'ocean', name:'เบ็ดทะเล', price:16 },
+  { id:'starlight', name:'เบ็ดดาว', price:22 }
+];
+
+/* =========================================================
+   2) STATE
+   ========================================================= */
+const state = {
+  screen:'title', shopMode:'request',
+  fame:0, coins:0, round:1, servedThisRound:0, correctThisRound:0,
+  queue:[], queueIndex:0, currentHormone:null, caughtHormoneId:null,
+  discoveredFishIds:new Set(), ownedOutfits:new Set(['classic']), ownedRods:new Set(['classic']),
+  equippedOutfit:'classic', equippedRod:'classic',
+  soundOn:true, speedMult:1,
+  theme:(function(){
+    const h = new Date().getHours();
+    if(h>=5 && h<9) return 'morning';
+    if(h>=9 && h<17) return 'day';
+    if(h>=17 && h<20) return 'evening';
+    return 'night';
+  })(),
+  scene:'sea', weather:'clear'
+};
+
+const THEME_PALETTE = {
+  morning: { skyTop:'#FFE8D6', skyMid:'#FFB4A2', skyDeep:'#4A90A4', floor:'#1B4B5A',
+             sceneryTint:'rgba(74,144,164,0.16)', bubble:'rgba(255,255,255,0.4)',
+             rock:'#2E5866', seaweed:'rgba(60,140,100,0.55)', ripple:'255,240,230',
+             shadow:'rgba(20,50,60,0.2)', shadowDark:'rgba(20,50,60,0.3)', ray:'rgba(255,220,180,0.14)' },
+  day:   { skyTop:'#bfe9ef', skyMid:'#57b7c9', skyDeep:'#1c7c92', floor:'#0b3d4d',
+           sceneryTint:'rgba(28,124,146,0.14)', bubble:'rgba(255,255,255,0.35)',
+           rock:'#12414f', seaweed:'rgba(46,125,90,0.55)', ripple:'255,255,255',
+           shadow:'rgba(8,30,36,0.22)', shadowDark:'rgba(8,30,36,0.32)', ray:'rgba(255,255,255,0.09)' },
+  evening: { skyTop:'#FFCBA4', skyMid:'#E8836B', skyDeep:'#5B3862', floor:'#2A1B3D',
+             sceneryTint:'rgba(91,56,98,0.2)', bubble:'rgba(255,220,200,0.32)',
+             rock:'#3A2440', seaweed:'rgba(80,60,90,0.5)', ripple:'255,200,170',
+             shadow:'rgba(20,10,25,0.3)', shadowDark:'rgba(20,10,25,0.42)', ray:'rgba(255,180,140,0.13)' },
+  night: { skyTop:'#22345c', skyMid:'#152238', skyDeep:'#0a1424', floor:'#040810',
+           sceneryTint:'rgba(20,40,90,0.24)', bubble:'rgba(200,220,255,0.28)',
+           rock:'#0a1c26', seaweed:'rgba(30,70,60,0.5)', ripple:'190,210,255',
+           shadow:'rgba(3,8,18,0.35)', shadowDark:'rgba(3,8,18,0.48)', ray:'rgba(180,200,255,0.06)' }
+};
+/* Scene is a color tint blended onto the time-of-day base — sea is the
+   untouched baseline, lake leans green, river leans muddy olive. Blended
+   fairly strongly so the location reads clearly regardless of time of day. */
+const SCENE_TINT = {
+  sea:   null,
+  lake:  { mix:'#2F9E5B', amount:0.4 },
+  river: { mix:'#8A6D3F', amount:0.38 }
+};
+function hexToRgb(hex){ hex = hex.replace('#',''); return [parseInt(hex.slice(0,2),16), parseInt(hex.slice(2,4),16), parseInt(hex.slice(4,6),16)]; }
+function mixHex(baseHex, mixHexColor, amount){
+  const [br,bg,bb] = hexToRgb(baseHex), [mr,mg,mb] = hexToRgb(mixHexColor);
+  const r = Math.round(br+(mr-br)*amount), g = Math.round(bg+(mg-bg)*amount), b = Math.round(bb+(mb-bb)*amount);
+  return `rgb(${r},${g},${b})`;
+}
+let _paletteCache = null, _paletteKey = '';
+function palette(){
+  const key = state.theme+'|'+state.scene;
+  if(_paletteKey===key && _paletteCache) return _paletteCache;
+  const base = THEME_PALETTE[state.theme];
+  const tint = SCENE_TINT[state.scene];
+  let result = base;
+  if(tint){
+    result = Object.assign({}, base, {
+      skyTop: mixHex(base.skyTop, tint.mix, tint.amount*0.5),
+      skyMid: mixHex(base.skyMid, tint.mix, tint.amount),
+      skyDeep: mixHex(base.skyDeep, tint.mix, tint.amount),
+      floor: mixHex(base.floor, tint.mix, tint.amount*1.1)
+    });
+  }
+  _paletteCache = result; _paletteKey = key;
+  return result;
+}
+function shadowDefForTheme(){ return { color:palette().shadow, colorDark:palette().shadowDark, pattern:'none' }; }
+
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.theme);
+}
+function setTheme(theme){
+  if(state.theme===theme) return;
+  sfxClick();
+  state.theme = theme;
+  applyTheme();
+  updateSettingsUI();
+}
+function setScene(scene){
+  if(state.scene===scene) return;
+  sfxClick();
+  state.scene = scene;
+  if(shopDeco) shopDeco.regenerate();
+  if(dockDeco) dockDeco.regenerate();
+  updateSettingsUI();
+}
+function setWeather(weather){
+  if(state.weather===weather) return;
+  sfxClick();
+  state.weather = weather;
+  updateSettingsUI();
+}
+
+function byId(id){ return HORMONES.find(h=>h.id===id); }
+function missionFor(hormone, variantIndex){
+  const variant = CUSTOMER_VARIANTS[variantIndex % CUSTOMER_VARIANTS.length];
+  if(!variant.name) return Object.assign({}, hormone);
+  return Object.assign({}, hormone, {
+    customerName:variant.name,
+    customerEmoji:variant.emoji,
+    request:variant.lead + hormone.request,
+    correct:variant.correctLead + hormone.correct,
+    wrong:variant.wrongLead + hormone.wrong
+  });
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+/* =========================================================
+   3) AUDIO — เสียงประกอบสังเคราะห์ด้วย Web Audio API
+   ========================================================= */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx = null; }
+  }
+}
+function tone(freq, dur, type, startGain, delay){
+  type = type || 'sine';
+  startGain = startGain===undefined ? 0.15 : startGain;
+  delay = delay || 0;
+  if(!state.soundOn) return;
+  ensureAudio();
+  if(!audioCtx) return;
+  if(audioCtx.state==='suspended'){ audioCtx.resume(); }
+  const t0 = audioCtx.currentTime + delay;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.linearRampToValueAtTime(startGain, t0+0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(t0); osc.stop(t0+dur+0.03);
+}
+function sfxClick(){ tone(520,0.07,'triangle',0.12); }
+function sfxCast(){ tone(300,0.15,'sine',0.1); tone(500,0.12,'sine',0.08,0.08); }
+function sfxCatch(){ tone(700,0.09,'square',0.09); tone(950,0.12,'square',0.09,0.07); }
+function sfxCorrect(){ tone(523,0.12,'sine',0.14); tone(659,0.12,'sine',0.14,0.1); tone(784,0.18,'sine',0.14,0.2); }
+function sfxWrong(){ tone(300,0.18,'sawtooth',0.09); tone(220,0.22,'sawtooth',0.09,0.12); }
+
+/* =========================================================
+   4) FISH DRAWING — ใช้วาดทั้งในเกม / หน้าตกได้ / สมุดฮอร์โมน
+   ========================================================= */
+function drawStar(c,x,y,s){
+  c.save(); c.translate(x,y);
+  c.beginPath();
+  c.moveTo(0,-s); c.lineTo(s*0.28,-s*0.28); c.lineTo(s,0); c.lineTo(s*0.28,s*0.28);
+  c.lineTo(0,s); c.lineTo(-s*0.28,s*0.28); c.lineTo(-s,0); c.lineTo(-s*0.28,-s*0.28);
+  c.closePath(); c.fill();
+  c.restore();
+}
+
+function drawFish(c, x, y, r, def, flip, shadowMode){
+  c.save();
+  c.translate(x,y);
+  c.scale(flip?-1:1, 1);
+  const wig = Math.sin(performance.now()*0.008)*0.15;
+
+  c.fillStyle = def.colorDark;
+  c.beginPath();
+  if(def.tail==='fan'){
+    c.moveTo(-r*0.85,0);
+    c.quadraticCurveTo(-r*1.5,-r*0.9+wig*10,-r*1.7,0);
+    c.quadraticCurveTo(-r*1.5,r*0.9+wig*10,-r*0.85,0);
+  } else if(def.tail==='veil'){
+    c.moveTo(-r*0.85,0);
+    c.quadraticCurveTo(-r*1.9,-r*1.1+wig*14,-r*2.1,-r*0.2);
+    c.quadraticCurveTo(-r*1.6,r*0.1,-r*1.9,r*1.1+wig*14);
+    c.quadraticCurveTo(-r*1.5,r*0.2,-r*0.85,0);
+  } else {
+    c.moveTo(-r*0.8,0);
+    c.lineTo(-r*1.6,-r*0.75+wig*10);
+    c.lineTo(-r*1.15,0);
+    c.lineTo(-r*1.6,r*0.75+wig*10);
+    c.closePath();
+  }
+  c.fill();
+
+  c.fillStyle = def.color;
+  c.beginPath();
+  c.ellipse(0,0,r,r*0.68,0,0,Math.PI*2);
+  c.fill();
+
+  if(!shadowMode){
+    if(def.pattern==='spots'){
+      c.fillStyle = def.colorDark;
+      [[-r*0.15,-r*0.15],[r*0.22,r*0.05],[-r*0.4,r*0.2]].forEach(p=>{
+        c.beginPath(); c.arc(p[0],p[1],r*0.11,0,Math.PI*2); c.fill();
+      });
+    } else if(def.pattern==='stripes'){
+      c.strokeStyle = def.colorDark;
+      c.lineWidth = r*0.13;
+      for(let i=-1;i<=1;i++){
+        c.beginPath(); c.moveTo(i*r*0.32,-r*0.6); c.lineTo(i*r*0.32,r*0.6); c.stroke();
+      }
+    } else if(def.pattern==='stars'){
+      c.fillStyle = 'rgba(255,255,255,0.9)';
+      [[-r*0.1,-r*0.2],[r*0.28,0.02*r],[-r*0.35,r*0.18]].forEach(p=>{
+        drawStar(c,p[0],p[1],r*0.07);
+      });
+    }
+  }
+
+  c.fillStyle = def.colorDark;
+  c.beginPath();
+  if(def.fin==='spiky'){
+    c.moveTo(-r*0.25,-r*0.62);
+    c.lineTo(-r*0.05,-r*1.15);
+    c.lineTo(r*0.1,-r*0.6);
+    c.lineTo(r*0.3,-r*1.05);
+    c.lineTo(r*0.45,-r*0.55);
+  } else {
+    c.moveTo(-r*0.3,-r*0.6);
+    c.quadraticCurveTo(r*0.1,-r*1.05,r*0.5,-r*0.55);
+  }
+  c.closePath(); c.fill();
+
+  if(!shadowMode){
+    c.fillStyle = '#fff';
+    c.beginPath(); c.arc(r*0.45,-r*0.12,r*0.16,0,Math.PI*2); c.fill();
+    c.fillStyle = '#10262b';
+    c.beginPath(); c.arc(r*0.49,-r*0.12,r*0.08,0,Math.PI*2); c.fill();
+  }
+
+  c.restore();
+}
+
+function roundRectPath(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);
+  c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+function drawFishLabel(c,x,y,text){
+  const fontSize = Math.max(11, Math.round(W*0.032));
+  c.save();
+  c.font = `600 ${fontSize}px Mitr, sans-serif`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  const metrics = c.measureText(text);
+  const padX = 8, padY = 5;
+  const w = metrics.width + padX*2;
+  const h = fontSize + padY*2;
+  c.fillStyle = 'rgba(15,42,46,0.72)';
+  roundRectPath(c, x-w/2, y-h/2, w, h, h/2);
+  c.fill();
+  c.fillStyle = '#F6E9D2';
+  c.fillText(text, x, y+1);
+  c.restore();
+}
+
+function drawRock(x,y,s){
+  ctx.fillStyle = palette().rock;
+  ctx.beginPath(); ctx.ellipse(x,y,s,s*0.55,0,0,Math.PI*2); ctx.fill();
+}
+function drawSeaweed(x,base){
+  ctx.strokeStyle = palette().seaweed;
+  ctx.lineWidth = 5; ctx.lineCap = 'round';
+  for(let i=0;i<3;i++){
+    const off = (i-1)*10;
+    const sway = Math.sin(performance.now()*0.0015+i)*10;
+    ctx.beginPath();
+    ctx.moveTo(x+off, base);
+    ctx.quadraticCurveTo(x+off+sway, base-40, x+off+sway*0.5, base-75);
+    ctx.stroke();
+  }
+}
+function drawHook(x,y){
+  ctx.strokeStyle = '#F6E9D2';
+  ctx.lineWidth = Math.max(2, hookRadius*0.22);
+  ctx.beginPath();
+  ctx.arc(x, y+hookRadius*0.7, hookRadius*0.85, Math.PI*0.1, Math.PI*1.5);
+  ctx.stroke();
+  ctx.fillStyle = '#FFD43B';
+  ctx.beginPath(); ctx.arc(x,y,hookRadius*0.5,0,Math.PI*2); ctx.fill();
+}
+
+function drawLotusLeaf(c,x,y,r,rot){
+  c.save();
+  c.translate(x,y); c.rotate(rot||0);
+  c.fillStyle = 'rgba(58,133,87,0.88)';
+  c.beginPath();
+  c.moveTo(0,0);
+  c.arc(0,0,r,0.16*Math.PI,1.84*Math.PI,false);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = 'rgba(28,90,55,0.5)';
+  c.lineWidth = 1;
+  for(let i=-2;i<=2;i++){
+    c.beginPath(); c.moveTo(0,0);
+    c.lineTo(Math.cos(i*0.32)*r*0.85, Math.sin(i*0.32)*r*0.85);
+    c.stroke();
+  }
+  c.restore();
+}
+function drawLotusFlower(c,x,y,r){
+  c.save();
+  c.translate(x,y-r*0.55);
+  for(let i=0;i<5;i++){
+    c.save();
+    c.rotate((i/5)*Math.PI*2);
+    c.fillStyle = 'rgba(255,182,193,0.92)';
+    c.beginPath();
+    c.ellipse(0,-r*0.5,r*0.26,r*0.5,0,0,Math.PI*2);
+    c.fill();
+    c.restore();
+  }
+  c.fillStyle = 'rgba(255,214,102,0.95)';
+  c.beginPath(); c.arc(0,0,r*0.22,0,Math.PI*2); c.fill();
+  c.restore();
+}
+
+/* ---- Ambient scenery decoration: shadow fish + lily pads + water-surface
+   ripples/glints, drawn on a small canvas behind the pier on the shop/dock
+   screens. Self-contained: each call owns its own rAF loop and state. ---- */
+const PIER_H = 46;
+function createSceneryDeco(canvasId){
+  const el = document.getElementById(canvasId);
+  if(!el) return null;
+  const c = el.getContext('2d');
+  let w=200, h=110;
+  function resize(){
+    const rect = el.getBoundingClientRect();
+    w = Math.max(rect.width,1); h = Math.max(rect.height,1);
+    const d = window.devicePixelRatio||1;
+    el.width = Math.round(w*d); el.height = Math.round(h*d);
+    c.setTransform(d,0,0,d,0,0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const waterLine = ()=> Math.max(20, h-PIER_H);
+  let shadowFish = [], leaves = [], risingBubbles = [];
+  const rainState = { drops:[] };
+  const lightningState = { timer:3+Math.random()*3, alpha:0 };
+
+  function buildDecor(){
+    const currentBias = state.scene==='river' ? 20 : 0;
+    shadowFish = [0,1,2,3,4].map(i=>({
+      tail: i%2===0?'fork':'fan', fin:'normal',
+      x: Math.random()*(w||220),
+      y: 14 + Math.random()*Math.max(20,(waterLine()-22)),
+      r: 10+Math.random()*7,
+      vx: (Math.random()<0.5?-1:1)*(7+Math.random()*8) + currentBias,
+      phase: Math.random()*Math.PI*2
+    }));
+    const leafCount = state.scene==='lake' ? 5 : (state.scene==='river' ? 1 : 3);
+    leaves = [...Array(leafCount)].map((_,i)=>({
+      x: 0.15*(w||220) + Math.random()*0.7*(w||220),
+      r: 9+Math.random()*5,
+      rot: Math.random()*Math.PI,
+      phase: Math.random()*Math.PI*2,
+      flower: i===0
+    }));
+    risingBubbles = [0,1,2,3].map(()=>({
+      x: Math.random()*(w||220),
+      y: Math.random()*(h||110),
+      r: 1.4+Math.random()*2.2,
+      speed: 6+Math.random()*9,
+      wobble: Math.random()*Math.PI*2
+    }));
+  }
+  buildDecor();
+
+  let ripples = [];
+  let glints = [];
+  let last = performance.now();
+
+  function frame(t){
+    const dt = Math.min((t-last)/1000, 0.05); last = t;
+    const wl = waterLine();
+    const pal = palette();
+    updateRain(rainState, dt, w, h);
+    updateLightning(lightningState, dt);
+    c.clearRect(0,0,w,h);
+
+    const sceneTint = SCENE_TINT[state.scene];
+    if(sceneTint){
+      c.fillStyle = sceneTint.mix + '22';
+      c.fillRect(0,0,w,h);
+    }
+
+    const g = c.createLinearGradient(0,0,0,wl);
+    g.addColorStop(0, pal.sceneryTint.replace(/[\d.]+\)$/, '0.05)'));
+    g.addColorStop(1, pal.sceneryTint);
+    c.fillStyle = g; c.fillRect(0,0,w,wl);
+    drawWeatherOverlay(c, w, wl);
+
+    {
+      c.save();
+      c.fillStyle = pal.ray;
+      for(let i=0;i<2;i++){
+        const bx = w*(0.3+i*0.45) + Math.sin(t*0.0004+i*2)*14;
+        c.beginPath();
+        c.moveTo(bx-10, 0); c.lineTo(bx+10, 0);
+        c.lineTo(bx+40, wl); c.lineTo(bx-40, wl);
+        c.closePath(); c.fill();
+      }
+      c.restore();
+    }
+
+    risingBubbles.forEach(b=>{
+      b.y -= b.speed*dt;
+      b.x += Math.sin(t*0.002+b.wobble)*5*dt;
+      if(b.y < -4){ b.y = wl; b.x = Math.random()*w; }
+    });
+    c.fillStyle = pal.bubble;
+    risingBubbles.forEach(b=>{ c.beginPath(); c.arc(b.x,b.y,b.r,0,Math.PI*2); c.fill(); });
+
+    shadowFish.forEach(f=>{
+      f.x += f.vx*dt;
+      if(f.x < -30) f.x = w+30;
+      if(f.x > w+30) f.x = -30;
+      const yy = Math.min(wl-8, f.y + Math.sin(t*0.0015+f.phase)*4);
+      drawFish(c, f.x, yy, f.r, Object.assign({tail:f.tail,fin:f.fin}, shadowDefForTheme()), f.vx<0, true);
+    });
+
+    c.strokeStyle = `rgba(${pal.ripple},0.4)`;
+    c.lineWidth = 1.4;
+    c.beginPath();
+    for(let x=0;x<=w;x+=6){
+      const yy = wl + Math.sin(t*0.0018 + x*0.09)*2;
+      if(x===0) c.moveTo(x,yy); else c.lineTo(x,yy);
+    }
+    c.stroke();
+
+    if(Math.random() < 0.015){ ripples.push({ x:Math.random()*w, y:wl, r:2, life:0, maxLife:1.6+Math.random()*0.6 }); }
+    ripples.forEach(rp=>{ rp.life += dt; rp.r = 2 + (rp.life/rp.maxLife)*26; });
+    ripples = ripples.filter(rp=>rp.life < rp.maxLife);
+    ripples.forEach(rp=>{
+      const alpha = 0.32*(1-rp.life/rp.maxLife);
+      c.strokeStyle = `rgba(${pal.ripple},${alpha})`;
+      c.lineWidth = 1.4;
+      c.beginPath(); c.ellipse(rp.x, rp.y, rp.r, rp.r*0.32, 0, 0, Math.PI*2); c.stroke();
+    });
+
+    if(Math.random() < 0.02){ glints.push({ x:Math.random()*w, y:Math.random()*wl*0.85, life:0, maxLife:0.6+Math.random()*0.5 }); }
+    glints.forEach(gl=>{ gl.life += dt; });
+    glints = glints.filter(gl=>gl.life < gl.maxLife);
+    glints.forEach(gl=>{
+      const a = Math.sin((gl.life/gl.maxLife)*Math.PI);
+      c.fillStyle = `rgba(${pal.ripple},${a*0.85})`;
+      c.beginPath(); c.arc(gl.x,gl.y,1.6,0,Math.PI*2); c.fill();
+    });
+
+    leaves.forEach(l=>{
+      const yy = wl - 4 + Math.sin(t*0.0012+l.phase)*2.5;
+      drawLotusLeaf(c, l.x, yy, l.r, l.rot);
+      if(l.flower) drawLotusFlower(c, l.x, yy, l.r);
+    });
+
+    drawRain(c, rainState);
+    drawLightning(c, lightningState, w, wl);
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  return { resize, regenerate: buildDecor };
+}
+
+/* =========================================================
+   5) FISHING ENGINE
+   ========================================================= */
+let canvas, ctx, dpr=1;
+let W=400, H=640, waterlineY=40, floorY=600, hookRadius=13;
+let rafId=null, lastT=0;
+let hook = { x:200, y:60, reeling:false, reelTargetFish:null };
+let fishes = [];
+let bubbles = [];
+let ambientFish = [];
+let shopDeco = null, dockDeco = null;
+let mainRain = { drops:[] };
+let mainLightning = { timer:3, alpha:0 };
+let joystick = { active:false, dx:0, dy:0, maxDist:42, centerX:0, centerY:0 };
+let keys = { up:false, down:false, left:false, right:false };
+let tipShown = false;
+let qte = { active:false, targetHits:0, hits:0, timer:null, decoyTimer:null, targetFish:null };
+
+function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
+
+/* ---- Weather: rain streaks + occasional lightning flash, reusable on any
+   canvas/context. Position updates live here so callers just draw. ---- */
+function updateRain(rainState, dt, w, h){
+  if(state.weather==='clear'){ rainState.drops.length = 0; return; }
+  const target = Math.max(4, Math.round(w * (state.weather==='storm' ? 0.4 : 0.2)));
+  while(rainState.drops.length < target){
+    rainState.drops.push({ x:Math.random()*w, y:Math.random()*h, len:8+Math.random()*10, speed:(state.weather==='storm'?520:340)+Math.random()*150 });
+  }
+  while(rainState.drops.length > target){ rainState.drops.pop(); }
+  rainState.drops.forEach(d=>{
+    d.y += d.speed*dt;
+    d.x -= d.speed*0.22*dt;
+    if(d.y > h+10){ d.y = -10; d.x = Math.random()*w; }
+  });
+}
+function drawRain(c, rainState){
+  if(!rainState.drops.length) return;
+  c.save();
+  c.strokeStyle = state.theme==='night' ? 'rgba(180,200,230,0.35)' : 'rgba(255,255,255,0.5)';
+  c.lineWidth = 1.1;
+  rainState.drops.forEach(d=>{
+    c.beginPath(); c.moveTo(d.x,d.y); c.lineTo(d.x-d.len*0.28, d.y-d.len); c.stroke();
+  });
+  c.restore();
+}
+function drawWeatherOverlay(c, w, h){
+  if(state.weather==='rain'){ c.fillStyle='rgba(60,70,80,0.12)'; c.fillRect(0,0,w,h); }
+  else if(state.weather==='storm'){ c.fillStyle='rgba(40,45,55,0.22)'; c.fillRect(0,0,w,h); }
+}
+function updateLightning(ls, dt){
+  if(state.weather!=='storm'){ ls.alpha = 0; ls.timer = 3; return; }
+  ls.timer -= dt;
+  if(ls.timer <= 0){ ls.timer = 2.5+Math.random()*5; ls.alpha = 0.55; }
+  ls.alpha = Math.max(0, ls.alpha - dt*1.3);
+}
+function drawLightning(c, ls, w, h){
+  if(ls.alpha<=0) return;
+  c.fillStyle = `rgba(255,255,255,${ls.alpha})`;
+  c.fillRect(0,0,w,h);
+}
+
+function setupCanvas(){
+  canvas = document.getElementById('fishing-canvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+}
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  W = Math.max(rect.width, 1);
+  H = Math.max(rect.height, 1);
+  dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(W*dpr);
+  canvas.height = Math.round(H*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  waterlineY = H*0.085;
+  floorY = H*0.93;
+  hookRadius = W*0.033;
+  hook.x = clamp(hook.x, hookRadius, W-hookRadius);
+  hook.y = clamp(hook.y, waterlineY+6, floorY-6);
+}
+
+function initBubbles(){
+  bubbles = [];
+  for(let i=0;i<14;i++){
+    bubbles.push({ x:Math.random()*W, y:waterlineY+Math.random()*(floorY-waterlineY), r:2+Math.random()*4, speed:12+Math.random()*18, wobble:Math.random()*Math.PI*2 });
+  }
+}
+
+/* Purely decorative silhouettes that drift in the empty top 30% zone (where
+   real catchable fish never spawn) so that area doesn't look bare. */
+function initAmbientFish(){
+  const zoneTop = waterlineY + (floorY-waterlineY)*0.3;
+  ambientFish = [0,1].map(()=>({
+    x: Math.random()*W,
+    y: waterlineY + 16 + Math.random()*Math.max(10, zoneTop-waterlineY-30),
+    vx: (Math.random()<0.5?-1:1)*(14+Math.random()*10),
+    r: 10+Math.random()*5,
+    tail: Math.random()<0.5?'fork':'fan',
+    phase: Math.random()*Math.PI*2
+  }));
+}
+
+/* Fish only spawn in the bottom 70% of the water column — top 30% stays clear */
+function makeFish(h){
+  const baseR = W*0.052;
+  const radius = baseR*h.size;
+  const zoneTop = waterlineY + (floorY-waterlineY)*0.3;
+  const zoneBottom = floorY - 20;
+  const baseY = zoneTop + Math.random()*Math.max(20, zoneBottom-zoneTop);
+  const dir = Math.random()<0.5 ? -1 : 1;
+  const speed = (W*0.11 + Math.random()*W*0.09) * state.speedMult;
+  return { hormoneId:h.id, x:radius+Math.random()*Math.max(1,(W-2*radius)), baseY, y:baseY, vx:dir*speed, phase:Math.random()*Math.PI*2, radius, caught:false, def:h };
+}
+
+/* Exactly 5 fish total: 1 correct + 4 decoys */
+function spawnFishForRound(targetId){
+  fishes = [];
+  const others = HORMONES.filter(h=>h.id!==targetId).map(h=>h.id);
+  const decoyIds = shuffle(others).slice(0,4);
+  const ids = [targetId, ...decoyIds];
+  ids.forEach(id=>{ fishes.push(makeFish(byId(id))); });
+}
+
+function currentDir(){
+  let dx = joystick.dx, dy = joystick.dy;
+  if(Math.abs(dx)<0.05 && Math.abs(dy)<0.05){
+    dx = (keys.right?1:0)-(keys.left?1:0);
+    dy = (keys.down?1:0)-(keys.up?1:0);
+    const m = Math.hypot(dx,dy);
+    if(m>1){ dx/=m; dy/=m; }
+  }
+  return {dx,dy};
+}
+
+function update(dt,t){
+  updateRain(mainRain, dt, W, H);
+  updateLightning(mainLightning, dt);
+
+  bubbles.forEach(b=>{
+    b.y -= b.speed*dt;
+    b.x += Math.sin(t*0.002+b.wobble)*6*dt;
+    if(b.y < waterlineY){ b.y = floorY; b.x = Math.random()*W; }
+  });
+
+  ambientFish.forEach(f=>{
+    f.x += f.vx*dt;
+    if(f.x < -24) f.x = W+24;
+    if(f.x > W+24) f.x = -24;
+  });
+
+  if(qte.active){
+    /* While reeling in the catch, hold the fish and hook in place until the
+       player completes the quick-time clicks. */
+    if(qte.targetFish){
+      hook.x = qte.targetFish.x;
+      hook.y = qte.targetFish.y;
+    }
+  } else if(hook.reeling){
+    const targetX = hook.reelTargetFish.x;
+    const targetY = waterlineY-10;
+    const lerp = Math.min(1, dt*4.5);
+    hook.x += (targetX-hook.x)*lerp;
+    hook.y += (targetY-hook.y)*lerp;
+    hook.reelTargetFish.x = hook.x;
+    hook.reelTargetFish.y = hook.y;
+    if(Math.abs(hook.y-targetY) < 3){
+      stopFishingLoop();
+      onCatchComplete(hook.reelTargetFish.hormoneId);
+      return;
+    }
+  } else {
+    const {dx,dy} = currentDir();
+    const hookSpeed = W*0.62;
+    hook.x = clamp(hook.x + dx*hookSpeed*dt, hookRadius, W-hookRadius);
+    hook.y = clamp(hook.y + dy*hookSpeed*dt, waterlineY+6, floorY-6);
+
+    fishes.forEach(f=>{
+      if(f.caught) return;
+      f.x += f.vx*dt;
+      if(f.x < f.radius){ f.x=f.radius; f.vx=Math.abs(f.vx); }
+      if(f.x > W-f.radius){ f.x=W-f.radius; f.vx=-Math.abs(f.vx); }
+      f.y = f.baseY + Math.sin(t*0.0018+f.phase)*10;
+    });
+
+    for(const f of fishes){
+      if(f.caught || (f.escapeUntil && t < f.escapeUntil)) continue;
+      const ddx=f.x-hook.x, ddy=f.y-hook.y;
+      if(Math.hypot(ddx,ddy) < f.radius+hookRadius){ catchFish(f); break; }
+    }
+  }
+}
+
+function catchFish(f){
+  if(qte.active || hook.reeling) return;
+  qte.active = true;
+  qte.targetFish = f;
+  qte.targetHits = 5 + Math.floor(Math.random()*6);
+  qte.hits = 0;
+  sfxCatch();
+  hideFishingTip();
+  showNextQteButton();
+}
+
+function clearQteTimer(){
+  if(qte.timer){ clearTimeout(qte.timer); qte.timer = null; }
+  if(qte.decoyTimer){ clearTimeout(qte.decoyTimer); qte.decoyTimer = null; }
+  $('qte-decoy').classList.remove('show');
+}
+function hideQte(){
+  clearQteTimer();
+  $('qte-action').classList.remove('show');
+  $('qte-status').classList.remove('show');
+}
+function setRandomQtePosition(element, minY=39, rangeY=30){
+  element.style.left = `${14 + Math.random()*72}%`;
+  element.style.top = `${minY + Math.random()*rangeY}%`;
+}
+function showQteDecoy(){
+  if(!qte.active) return;
+  const decoy = $('qte-decoy');
+  setRandomQtePosition(decoy, 42, 24);
+  decoy.classList.add('show');
+}
+function showNextQteButton(){
+  if(!qte.active) return;
+  clearQteTimer();
+  const action = $('qte-action');
+  const status = $('qte-status');
+  const timeLimit = Math.max(950, 2000 - qte.hits*120);
+  const buttonWidth = Math.max(72, 112 - qte.hits*5);
+  action.style.width = `${buttonWidth}px`;
+  action.style.minHeight = `${Math.round(buttonWidth*0.52)}px`;
+  action.style.fontSize = `${Math.max(12, 16-qte.hits*0.45)}px`;
+  status.textContent = `กดปุ่มสีส้มเท่านั้น! ${qte.hits}/${qte.targetHits} • ${(timeLimit/1000).toFixed(1)} วิ`;
+  status.classList.add('show');
+  setRandomQtePosition(action);
+  action.classList.add('show');
+  if(qte.hits >= 1 && Math.random() < 0.52){
+    qte.decoyTimer = setTimeout(showQteDecoy, 180 + Math.random()*360);
+  }
+  qte.timer = setTimeout(()=>failQte('ช้าไป! ปลาหลุดแล้ว!'), timeLimit);
+}
+function hitQte(){
+  if(!qte.active) return;
+  clearQteTimer();
+  qte.hits++;
+  if(qte.hits >= qte.targetHits){
+    const caughtFish = qte.targetFish;
+    qte.active = false;
+    qte.targetFish = null;
+    hideQte();
+    caughtFish.caught = true;
+    hook.reeling = true;
+    hook.reelTargetFish = caughtFish;
+    return;
+  }
+  showNextQteButton();
+}
+function hitQteDecoy(){
+  if(!qte.active) return;
+  failQte('กดเหยื่อหลอก! ปลาหลุดแล้ว!');
+}
+function failQte(reason='ปลาหลุดแล้ว!'){
+  if(!qte.active) return;
+  const escapedFish = qte.targetFish;
+  qte.active = false;
+  qte.targetFish = null;
+  hideQte();
+  if(escapedFish){
+    escapedFish.escapeUntil = performance.now()+1400;
+    escapedFish.x = clamp(hook.x + (Math.random()<0.5?-1:1)*(W*0.26), escapedFish.radius, W-escapedFish.radius);
+    escapedFish.baseY = clamp(hook.y + (Math.random()<0.5?-1:1)*(H*0.18), waterlineY+30, floorY-30);
+    escapedFish.y = escapedFish.baseY;
+  }
+  hook.x = clamp(hook.x + (Math.random()<0.5?-1:1)*(W*0.12), hookRadius, W-hookRadius);
+  hook.y = clamp(hook.y + H*0.08, waterlineY+6, floorY-6);
+  $('fishing-tip').textContent = `${reason} บังคับตะขอไปหาปลาตัวใหม่`;
+  $('fishing-tip').classList.add('show');
+  setTimeout(hideFishingTip, 1800);
+  sfxWrong();
+}
+
+function onCatchComplete(hormoneId){
+  state.caughtHormoneId = hormoneId;
+  state.discoveredFishIds.add(hormoneId);
+  buildGuide();
+  goSurface();
+}
+
+function drawGodRays(t){
+  const p = palette();
+  ctx.save();
+  ctx.fillStyle = p.ray;
+  for(let i=0;i<3;i++){
+    const baseX = W*(0.18+i*0.34) + Math.sin(t*0.0004+i*2)*22;
+    ctx.beginPath();
+    ctx.moveTo(baseX-16, waterlineY);
+    ctx.lineTo(baseX+16, waterlineY);
+    ctx.lineTo(baseX+64, floorY);
+    ctx.lineTo(baseX-64, floorY);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawWaterline(t){
+  ctx.save();
+  ctx.strokeStyle = palette().bubble;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for(let x=0;x<=W;x+=8){
+    const yy = waterlineY + Math.sin(t*0.0015 + x*0.05)*2.5;
+    if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawVignette(){
+  const vg = ctx.createRadialGradient(W/2,H*0.42,H*0.22, W/2,H*0.42,H*0.78);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1, state.theme==='night' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.22)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0,0,W,H);
+}
+
+function render(){
+  const p = palette();
+  const t = lastT;
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,p.skyTop); g.addColorStop(0.09,p.skyMid);
+  g.addColorStop(0.45,p.skyDeep); g.addColorStop(1,p.floor);
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  drawWeatherOverlay(ctx, W, H);
+
+  drawGodRays(t);
+  drawWaterline(t);
+
+  ctx.fillStyle = p.floor;
+  ctx.fillRect(0,floorY,W,H-floorY);
+
+  drawRock(W*0.12,floorY+6,W*0.065);
+  drawRock(W*0.32,floorY+9,W*0.045);
+  drawRock(W*0.82,floorY+7,W*0.075);
+  drawSeaweed(W*0.22,floorY);
+  drawSeaweed(W*0.62,floorY);
+  drawSeaweed(W*0.9,floorY);
+
+  ambientFish.forEach(f=>{
+    const yy = f.y + Math.sin(t*0.0012+f.phase)*3;
+    drawFish(ctx, f.x, yy, f.r, Object.assign({tail:f.tail,fin:'normal'}, shadowDefForTheme()), f.vx<0, true);
+  });
+
+  ctx.fillStyle = p.bubble;
+  bubbles.forEach(b=>{ ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); });
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(hook.x,0); ctx.lineTo(hook.x,hook.y); ctx.stroke();
+
+  fishes.forEach(f=>{
+    if(f.caught) return;
+    drawFish(ctx,f.x,f.y,f.radius,f.def,f.vx<0);
+    drawFishLabel(ctx, f.x, f.y - f.radius - 12, f.def.short || f.def.name);
+  });
+  if(hook.reeling && hook.reelTargetFish){
+    const f = hook.reelTargetFish;
+    drawFish(ctx,hook.x,hook.y,f.radius,f.def,false);
+  }
+  drawHook(hook.x,hook.y);
+
+  drawRain(ctx, mainRain);
+  drawVignette();
+  drawLightning(ctx, mainLightning, W, H);
+}
+
+function loop(t){
+  const dt = Math.min((t-lastT)/1000, 0.05);
+  lastT = t;
+  update(dt,t);
+  render();
+  if(state.screen==='fishing') rafId = requestAnimationFrame(loop);
+}
+function stopFishingLoop(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } }
+
+function startFishingRound(){
+  resizeCanvas();
+  hook.x = W/2; hook.y = waterlineY+16; hook.reeling=false; hook.reelTargetFish=null;
+  qte.active=false; qte.targetFish=null; hideQte();
+  $('fishing-tip').textContent = 'ลากวงกลมด้านล่างเพื่อบังคับเบ็ดไปหาปลาที่ต้องการ';
+  spawnFishForRound(state.currentHormone.id);
+  initBubbles();
+  initAmbientFish();
+  showScreen('fishing');
+  document.getElementById('fishing-hint-text').textContent = state.currentHormone.request;
+  sfxCast();
+  lastT = performance.now();
+  if(rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
+  showFishingTipOnce();
+}
+
+function showFishingTipOnce(){
+  if(tipShown) return;
+  tipShown = true;
+  const tip = document.getElementById('fishing-tip');
+  tip.classList.add('show');
+  setTimeout(hideFishingTip, 4000);
+}
+function hideFishingTip(){ document.getElementById('fishing-tip').classList.remove('show'); }
+
+function cancelFishing(){
+  sfxClick();
+  stopFishingLoop();
+  hook.reeling = false;
+  hook.reelTargetFish = null;
+  qte.active = false;
+  qte.targetFish = null;
+  hideQte();
+  showScreen('dock');
+}
+
+/* ---- joystick + keyboard input ---- */
+function setupJoystick(){
+  const base = document.getElementById('joystick-base');
+  const knob = document.getElementById('joystick-knob');
+  function updateFromEvent(e){
+    const rect = base.getBoundingClientRect();
+    joystick.centerX = rect.left+rect.width/2;
+    joystick.centerY = rect.top+rect.height/2;
+    let dx = e.clientX - joystick.centerX;
+    let dy = e.clientY - joystick.centerY;
+    const dist = Math.hypot(dx,dy);
+    if(dist>joystick.maxDist){ dx = dx/dist*joystick.maxDist; dy = dy/dist*joystick.maxDist; }
+    joystick.dx = dx/joystick.maxDist;
+    joystick.dy = dy/joystick.maxDist;
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+  }
+  base.addEventListener('pointerdown', e=>{
+    joystick.active = true;
+    try{ base.setPointerCapture(e.pointerId); }catch(err){}
+    hideFishingTip();
+    updateFromEvent(e);
+  });
+  base.addEventListener('pointermove', e=>{ if(joystick.active) updateFromEvent(e); });
+  function release(){ joystick.active=false; joystick.dx=0; joystick.dy=0; knob.style.transform='translate(0px,0px)'; }
+  base.addEventListener('pointerup', release);
+  base.addEventListener('pointercancel', release);
+}
+function setupKeyboard(){
+  window.addEventListener('keydown', e=>{
+    if(state.screen!=='fishing') return;
+    let handled = true;
+    if(['ArrowUp','w','W'].includes(e.key)) keys.up = true;
+    else if(['ArrowDown','s','S'].includes(e.key)) keys.down = true;
+    else if(['ArrowLeft','a','A'].includes(e.key)) keys.left = true;
+    else if(['ArrowRight','d','D'].includes(e.key)) keys.right = true;
+    else handled = false;
+    if(handled) e.preventDefault();
+  });
+  window.addEventListener('keyup', e=>{
+    if(['ArrowUp','w','W'].includes(e.key)) keys.up = false;
+    if(['ArrowDown','s','S'].includes(e.key)) keys.down = false;
+    if(['ArrowLeft','a','A'].includes(e.key)) keys.left = false;
+    if(['ArrowRight','d','D'].includes(e.key)) keys.right = false;
+  });
+}
+
+/* =========================================================
+   6) SCREENS & GAME FLOW
+   ========================================================= */
+function $(id){ return document.getElementById(id); }
+function $all(sel){ return document.querySelectorAll(sel); }
+
+const BACK_TARGET = { shop:'title', dock:'shop', surface:'dock', summary:'title' };
+
+function showScreen(name){
+  $all('.screen').forEach(s=>s.classList.remove('active'));
+  $('screen-'+name).classList.add('active');
+  state.screen = name;
+  $('hud').classList.toggle('hud-hidden', name==='fishing' || name==='title');
+  const backBtn = $('btn-back-dynamic');
+  if(backBtn){ backBtn.style.display = BACK_TARGET[name] ? '' : 'none'; }
+}
+function updateFameDisplay(){ $('fame-count').textContent = state.fame; }
+function updateCoinDisplay(){
+  $('coin-count').textContent = state.coins;
+  const shopCoins = $('shop-coin-count');
+  if(shopCoins) shopCoins.textContent = state.coins;
+}
+
+function startGame(){
+  sfxClick();
+  state.fame = 0; state.coins = 0; state.round = 1;
+  state.discoveredFishIds.clear();
+  updateFameDisplay(); updateCoinDisplay(); buildGuide();
+  startRound();
+}
+function startRound(){
+  state.queue = shuffle(HORMONES.map((h,index)=>({
+    hormoneId:h.id,
+    variantIndex:(state.round + index) % CUSTOMER_VARIANTS.length
+  })));
+  state.queueIndex = 0;
+  state.servedThisRound = 0;
+  state.correctThisRound = 0;
+  state.speedMult = Math.min(1.5, 1+(state.round-1)*0.08);
+  nextCustomer();
+}
+function nextCustomer(){
+  if(state.queueIndex >= state.queue.length){ showSummary(); return; }
+  const mission = state.queue[state.queueIndex];
+  state.currentHormone = missionFor(byId(mission.hormoneId), mission.variantIndex);
+  state.queueIndex++;
+  renderShopRequest();
+  showScreen('shop');
+}
+function renderShopRequest(){
+  state.shopMode = 'request';
+  const h = state.currentHormone;
+  $('shop-avatar').textContent = h.customerEmoji;
+  $('shop-customer-name').textContent = h.customerName;
+  $('shop-bubble-text').textContent = h.request;
+  $('shop-request-view').style.display = '';
+  $('shop-delivery-view').style.display = 'none';
+}
+function goDock(){
+  sfxClick();
+  $('dock-recap-text').textContent = state.currentHormone.request;
+  $('dock-avatar').textContent = state.currentHormone.customerEmoji;
+  showScreen('dock');
+}
+function castLine(){ startFishingRound(); }
+
+function goSurface(){
+  const h = byId(state.caughtHormoneId);
+  const cv = $('surface-fish-canvas');
+  const sctx = cv.getContext('2d');
+  sctx.clearRect(0,0,cv.width,cv.height);
+  drawFish(sctx, cv.width/2, cv.height/2, cv.width*0.3, h, false);
+  $('surface-fish-name').textContent = h.name;
+  showScreen('surface');
+}
+function returnToShopDeliver(){ sfxClick(); deliverFish(); }
+
+/* Delivery view always teaches the hormone the CUSTOMER needed (the answer),
+   while the fish visual/caption shows whichever fish was actually delivered. */
+function deliverFish(){
+  state.shopMode = 'delivery';
+  const target = state.currentHormone;
+  const caught = byId(state.caughtHormoneId);
+  const isCorrect = caught.id === target.id;
+  state.servedThisRound++;
+  if(isCorrect){ state.fame++; state.correctThisRound++; } else { state.fame--; }
+  const coinsEarned = isCorrect ? 3 : 1;
+  state.coins += coinsEarned;
+  updateFameDisplay();
+  updateCoinDisplay();
+
+  $('shop-request-view').style.display = 'none';
+  $('shop-delivery-view').style.display = '';
+
+  $('delivery-avatar').textContent = target.customerEmoji;
+  $('delivery-customer-name').textContent = target.customerName;
+
+  const dcv = $('delivery-fish-canvas');
+  const dctx = dcv.getContext('2d');
+  dctx.clearRect(0,0,dcv.width,dcv.height);
+  drawFish(dctx, dcv.width/2, dcv.height/2, dcv.width*0.32, caught, false);
+  $('delivery-caught-name').textContent = caught.name;
+
+  $('delivery-reaction-badge').textContent = isCorrect ? '✔ ถูกต้อง' : '✘ ไม่ถูกต้อง';
+  $('delivery-reaction-badge').className = 'reaction-badge ' + (isCorrect?'good':'bad');
+  $('delivery-feedback-text').textContent = isCorrect ? target.correct : target.wrong;
+  $('delivery-fame-change').textContent = isCorrect ? '+1 คะแนน' : '-1 คะแนน';
+  $('delivery-fame-change').className = 'fame-change ' + (isCorrect?'good':'bad');
+  $('delivery-coin-change').textContent = `💰 +${coinsEarned}`;
+
+  $('delivery-info-name').textContent = target.name;
+  $('delivery-info-gland').textContent = target.gland;
+  $('delivery-info-func').textContent = target.func;
+  $('delivery-info-deficiency').textContent = target.deficiency;
+  $('delivery-info-excess').textContent = target.excess;
+  const noteEl = $('delivery-info-note');
+  if(target.note){ noteEl.textContent = target.note; noteEl.style.display=''; } else { noteEl.style.display='none'; }
+
+  const mismatch = $('delivery-mismatch-note');
+  if(!isCorrect){
+    mismatch.style.display = '';
+    mismatch.textContent = `ปลาที่คุณส่งไปคือ "${caught.name}" (${caught.gland}) ซึ่งไม่ใช่ปลาที่ลูกค้าต้องการ`;
+  } else {
+    mismatch.style.display = 'none';
+  }
+
+  showScreen('shop');
+  if(isCorrect) sfxCorrect(); else sfxWrong();
+}
+function goNextCustomer(){ sfxClick(); nextCustomer(); }
+
+function showSummary(){
+  $('summary-round').textContent = state.round;
+  $('summary-correct').textContent = state.correctThisRound;
+  $('summary-total').textContent = state.servedThisRound;
+  $('summary-fame').textContent = state.fame;
+  $('summary-coins').textContent = state.coins;
+  showScreen('summary');
+}
+function nextRound(){ sfxClick(); state.round++; startRound(); }
+function restartAll(){ sfxClick(); state.round=1; state.fame=0; updateFameDisplay(); startRound(); }
+
+/* ---- Guide modal ---- */
+function buildGuide(){
+  const list = $('guide-list');
+  list.innerHTML = '';
+  HORMONES.forEach(h=>{
+    const discovered = state.discoveredFishIds.has(h.id);
+    const item = document.createElement('div');
+    item.className = 'guide-item';
+    item.innerHTML = `
+      <button class="guide-item-head" type="button">
+        <canvas class="guide-fish-icon" width="60" height="60" ${discovered ? '' : 'aria-label="ยังไม่พบปลา"'}></canvas>
+        <span class="guide-item-titles">
+          <span class="guide-item-name">${h.name}</span>
+          <span class="guide-item-gland">${h.gland}</span>
+        </span>
+        <span class="guide-item-chevron">▾</span>
+      </button>
+      <div class="guide-item-body">
+        <p><strong>หน้าที่:</strong> ${h.func}</p>
+        <p><strong>เมื่อขาด:</strong> ${h.deficiency}</p>
+        <p><strong>เมื่อเกิน:</strong> ${h.excess}</p>
+        ${h.note ? `<p class="guide-note">${h.note}</p>` : ''}
+      </div>`;
+    list.appendChild(item);
+    item.querySelector('.guide-item-head').addEventListener('click', ()=>{ item.classList.toggle('open'); sfxClick(); });
+    const iconCanvas = item.querySelector('.guide-fish-icon');
+    if(iconCanvas){
+      const ictx = iconCanvas.getContext('2d');
+      if(discovered) drawFish(ictx, 30, 32, 19, h, false);
+      else drawFish(ictx, 30, 32, 19, {tail:h.tail, fin:'normal', color:'#3a4a50', colorDark:'#26343a', pattern:'none'}, false, true);
+    }
+  });
+}
+function openGuide(){ sfxClick(); $('modal-guide').classList.add('open'); }
+function closeGuide(){ sfxClick(); $('modal-guide').classList.remove('open'); }
+
+function applyPlayerSkins(){
+  $all('.player-character').forEach(player=>{
+    OUTFIT_ITEMS.forEach(item=>player.classList.remove(`outfit-${item.id}`));
+    ROD_ITEMS.forEach(item=>player.classList.remove(`rod-${item.id}`));
+    player.classList.add(`outfit-${state.equippedOutfit}`, `rod-${state.equippedRod}`);
+  });
+}
+function skinCardMarkup(item, category){
+  const owned = category==='outfit' ? state.ownedOutfits.has(item.id) : state.ownedRods.has(item.id);
+  const equipped = category==='outfit' ? state.equippedOutfit===item.id : state.equippedRod===item.id;
+  const status = equipped ? 'กำลังใช้งาน' : owned ? 'สวมใส่' : `ซื้อ ${item.price} 💰`;
+  return `<button class="skin-card${owned?' owned':''}${equipped?' equipped':''}" data-category="${category}" data-item-id="${item.id}" type="button">
+    <span class="skin-card-name">${item.name}</span><span class="skin-card-price">${status}</span>
+  </button>`;
+}
+function renderCosmeticShop(message='ซื้อหรือเลือกสกินที่มี เพื่อเปลี่ยนชุดและเบ็ดได้ทันที'){
+  $('outfit-shop-list').innerHTML = OUTFIT_ITEMS.map(item=>skinCardMarkup(item,'outfit')).join('');
+  $('rod-shop-list').innerHTML = ROD_ITEMS.map(item=>skinCardMarkup(item,'rod')).join('');
+  $('shop-message').textContent = message;
+  updateCoinDisplay();
+  applyPlayerSkins();
+  $all('#modal-shop .skin-card').forEach(button=>{
+    button.addEventListener('click', ()=>selectCosmetic(button.dataset.category, button.dataset.itemId));
+  });
+}
+function selectCosmetic(category, itemId){
+  const items = category==='outfit' ? OUTFIT_ITEMS : ROD_ITEMS;
+  const owned = category==='outfit' ? state.ownedOutfits : state.ownedRods;
+  const item = items.find(candidate=>candidate.id===itemId);
+  if(!item) return;
+  if(!owned.has(item.id)){
+    if(state.coins < item.price){
+      renderCosmeticShop(`เหรียญยังไม่พอ ต้องการอีก ${item.price-state.coins} 💰`);
+      return;
+    }
+    state.coins -= item.price;
+    owned.add(item.id);
+  }
+  if(category==='outfit') state.equippedOutfit = item.id;
+  else state.equippedRod = item.id;
+  sfxClick();
+  renderCosmeticShop(`สวม${category==='outfit' ? 'ชุด' : 'เบ็ด'} “${item.name}” แล้ว`);
+}
+function openShop(){
+  sfxClick();
+  renderCosmeticShop();
+  $('modal-shop').classList.add('open');
+}
+function closeShop(){ sfxClick(); $('modal-shop').classList.remove('open'); }
+
+function openHowTo(){ sfxClick(); $('modal-howto').classList.add('open'); }
+function closeHowTo(){ sfxClick(); $('modal-howto').classList.remove('open'); }
+const bgMusic = document.getElementById('bg-music');
+if(bgMusic) bgMusic.volume = 0.35;
+let musicStarted = false;
+function tryStartMusicOnce(){
+  if(musicStarted || !bgMusic) return;
+  musicStarted = true;
+  if(state.soundOn) bgMusic.play().catch(()=>{});
+}
+function toggleSound(){
+  state.soundOn = !state.soundOn;
+  if(state.soundOn){
+    sfxClick();
+    if(bgMusic) bgMusic.play().catch(()=>{});
+  } else if(bgMusic){
+    bgMusic.pause();
+  }
+  updateSettingsUI();
+}
+
+function updateSettingsUI(){
+  $all('#scene-options .settings-opt').forEach(b=>b.classList.toggle('active', b.dataset.scene===state.scene));
+  $all('#weather-options .settings-opt').forEach(b=>b.classList.toggle('active', b.dataset.weather===state.weather));
+  $all('#time-options .settings-opt').forEach(b=>b.classList.toggle('active', b.dataset.timeTheme===state.theme));
+  const sb = $('btn-settings-sound');
+  if(sb){
+    sb.textContent = state.soundOn ? '🔊 เปิดอยู่' : '🔇 ปิดอยู่';
+    sb.classList.toggle('off', !state.soundOn);
+  }
+}
+function openSettings(){ sfxClick(); updateSettingsUI(); $('modal-settings').classList.add('open'); }
+function closeSettings(){ sfxClick(); $('modal-settings').classList.remove('open'); }
+
+/* =========================================================
+   7) INIT
+   ========================================================= */
+function init(){
+  setupCanvas();
+  setupJoystick();
+  setupKeyboard();
+  buildGuide();
+  updateFameDisplay();
+  updateCoinDisplay();
+  applyPlayerSkins();
+  applyTheme();
+  shopDeco = createSceneryDeco('shop-scenery-canvas');
+  dockDeco = createSceneryDeco('dock-scenery-canvas');
+  document.addEventListener('pointerdown', tryStartMusicOnce, {once:true});
+
+  $all('.settings-gear-btn').forEach(b=>b.addEventListener('click', openSettings));
+  $('btn-close-settings').addEventListener('click', closeSettings);
+  $all('#scene-options .settings-opt').forEach(b=>b.addEventListener('click', ()=>setScene(b.dataset.scene)));
+  $all('#weather-options .settings-opt').forEach(b=>b.addEventListener('click', ()=>setWeather(b.dataset.weather)));
+  $all('#time-options .settings-opt').forEach(b=>b.addEventListener('click', ()=>setTheme(b.dataset.timeTheme)));
+  $('btn-settings-sound').addEventListener('click', toggleSound);
+
+  $('btn-start').addEventListener('click', startGame);
+  $('btn-howto').addEventListener('click', openHowTo);
+  $('btn-guide-title').addEventListener('click', openGuide);
+  $('btn-guide-hud').addEventListener('click', openGuide);
+  $('btn-close-guide').addEventListener('click', closeGuide);
+  $('btn-shop-hud').addEventListener('click', openShop);
+  $('btn-close-shop').addEventListener('click', closeShop);
+  $('btn-close-howto').addEventListener('click', closeHowTo);
+
+  $('btn-back-dynamic').addEventListener('click', ()=>{
+    sfxClick();
+    const target = BACK_TARGET[state.screen];
+    if(target) showScreen(target);
+  });
+  $('btn-fishing-back').addEventListener('click', cancelFishing);
+  $('qte-action').addEventListener('click', hitQte);
+
+  $('btn-go-fish').addEventListener('click', goDock);
+  $('btn-cast').addEventListener('click', castLine);
+  $('btn-return-shop').addEventListener('click', returnToShopDeliver);
+  $('btn-next-customer').addEventListener('click', goNextCustomer);
+  $('btn-next-round').addEventListener('click', nextRound);
+  $('btn-summary-guide').addEventListener('click', openGuide);
+  $('btn-restart-all').addEventListener('click', restartAll);
+
+  showScreen('title');
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
