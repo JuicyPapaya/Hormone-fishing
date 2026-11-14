@@ -2,7 +2,7 @@
 
 An educational biology game about the **endocrine system and hormones**. Players take the role of a fisher who listens to a customer's symptoms, works out which hormone is needed, then catches the matching "hormone fish" and delivers it to the right person.
 
-### ▶️ [Play the game](https://YOUR-USERNAME.github.io/hormone-fishing/)
+### ▶️ [Play the game](https://juicypapaya.github.io/Hormone-fishing/)
 
 <!-- Place QR code here, e.g. ![QR](img/qr.png) -->
 
@@ -76,4 +76,4 @@ Download `index.html` and open it in any browser.
 
 ## Author
 
-**Your Name** · Grade / School · [GitHub](https://github.com/YOUR-USERNAME)
+Q · Grade / School · [GitHub](https://github.com/JuicyPapaya)
