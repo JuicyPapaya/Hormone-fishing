@@ -4,7 +4,7 @@ An educational biology game about the **endocrine system and hormones**. Players
 
 ### ▶️ [Play the game](https://juicypapaya.github.io/Hormone-fishing/)
 
-<!-- Place QR code here, e.g. ![QR](img/qr.png) -->
+<img src="img/qr.png" width="160" alt="QR code to play the game">
 
 ---
 
