@@ -35,21 +35,27 @@ After playing, learners can:
 | Hormone guide | Records details of every hormone you have caught |
 | Shop | Spend coins on character outfits and fishing rods |
 
-## Hormones Covered (22)
+## Hormones Covered (35)
 
 | Source | Hormones |
 | --- | --- |
 | Pancreas | Insulin, Glucagon, Somatostatin |
-| Thyroid gland | Thyroxine |
-| Pituitary / Hypothalamus | Growth hormone, Prolactin, Oxytocin |
-| Adrenal glands | Adrenaline, Noradrenaline, Cortisol, Aldosterone |
+| Thyroid gland | Thyroxine, T3 |
+| Parathyroid gland | PTH |
+| Anterior pituitary | Growth hormone, Prolactin, TSH, ACTH, FSH, LH |
+| Posterior pituitary / Hypothalamus | ADH, Oxytocin |
+| Adrenal cortex | Cortisol, Aldosterone, DHEA |
+| Adrenal medulla | Adrenaline, Noradrenaline |
 | Pineal gland | Melatonin |
 | Ovary / Placenta | Estrogen, Progesterone, Relaxin |
 | Testis | Testosterone |
 | Testis / Ovary | Inhibin |
-| Digestive tract | Gastrin, Secretin, Ghrelin |
+| Stomach | Gastrin, Ghrelin |
+| Small intestine | Secretin, CCK, GLP-1 |
 | Adipose tissue | Leptin |
-| Kidney | Renin |
+| Kidney | EPO, Renin |
+| Heart | ANP |
+| Liver | IGF-1 |
 
 ## Screenshots
 
